@@ -184,8 +184,8 @@ localVertices.forEach(pos => {
 });
 
 // Çekirdeği kendi eksenlerinde döndürerek nötr ve pozitif noktaların sürekli yer değiştirmesini sağlıyoruz
-coreGroup.rotation.x += 0.002;
-coreGroup.rotation.y += 0.004;
+//coreGroup.rotation.x += 0.002;
+//coreGroup.rotation.y += 0.004;
 
         const jupiter = createActor(0.8, 0xffffff, 0xaaaaaa);
         jupiter.position.set(0, 5.2, 0);
@@ -223,7 +223,10 @@ coreGroup.rotation.y += 0.004;
             const delta = clock.getDelta();
             time += delta * 0.5; 
 
-            sun.rotation.y += 0.003;
+            coreGroup.rotation.x += 0.002;
+            coreGroup.rotation.y += 0.004;
+
+            //sun.rotation.y += 0.003;
             jupiter.rotation.y += 0.006;
             saturn.rotation.y -= 0.004;
 
