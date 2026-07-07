@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro-Flora Sacred Geometry Engine</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000000; }
+        canvas { display: block; }
+        #info {
+            position: absolute;
+            top: 10px; left: 10px;
+            color: #ffffff; font-family: monospace; font-size: 12px;
+            pointer-events: none; background: rgba(0,0,0,0.7); padding: 15px;
+            border-radius: 5px; line-height: 1.5; border: 1px solid #444;
+            user-select: none;
+        }
+        .controls-hint {
+            margin-top: 10px;
+            color: #00ffaa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <strong>Astro-Flora Sacred Geometry Engine</strong><br>
+        Center (0): Sun / Vital Core<br>
+        Polar Nodes: Jupiter (3/White King) & Saturn (6/Black Queen)<br>
+        3 Nested Spheres holding the Fractal Tetrahedrons (Octaves)<br>
+        --------------------------------------------------------<br>
+        Clockwise Wheel: 1, 4, 7 | Counter-Clockwise Wheel: 2, 8, 5
+        <div class="controls-hint">
+            [Press 1]: Isometric Mandala View<br>
+            [Press 2]: Absolute Top View (North Pole)<br>
+            [Press 3]: Absolute Bottom View (South Pole)
+        </div>
+    </div>
+
+    <!-- Three.js Library -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+
+    <script>
+        // --- 1. Scene and Camera Configuration ---
+        const scene = new THREE.Scene();
+        const aspect = window.innerWidth / window.innerHeight;
+        const d = 11; 
+        const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        // Define Camera Positions
+        const views = {
+            isometric: { x: 20, y: 20, z: 20, upX: 0, upY: 1, upZ: 0 },
+            top:       { x: 0,  y: 25, z: 0,  upX: 0, upY: 0, upZ: -1 }, // Standard top-down alignment
+            bottom:    { x: 0,  y: -25, z: 0, upX: 0, upY: 0, upZ: 1 }   // Standard bottom-up alignment
+        };
+
+        // Initialize with default Isometric view
+        function switchView(viewName) {
+            const v = views[viewName];
+            camera.position.set(v.x, v.y, v.z);
+            camera.up.set(v.upX, v.upY, v.upZ); // Reset up vector to prevent camera flipping errors
+            camera.lookAt(0, 0, 0);
+            camera.updateProjectionMatrix();
+        }
+
+        switchView('isometric');
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 2.0, 100);
+        scene.add(pointLight);
+
+        // Core Groups
+        const staticGeometryGroup = new THREE.Group();
+        scene.add(staticGeometryGroup);
+
+        const engineGroup = new THREE.Group();
+        scene.add(engineGroup);
+
+        // --- 2. Geometric Blueprint Setup ---
+        const outerCubeGeom = new THREE.BoxGeometry(14, 14, 14);
+        const outerCubeMat = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff, wireframe: true, transparent: true, opacity: 0.35 
+        });
+        const outerCube = new THREE.Mesh(outerCubeGeom, outerCubeMat);
+        staticGeometryGroup.add(outerCube);
+
+        const zodiRingGeom = new THREE.RingGeometry(9.8, 10.0, 48); 
+        const zodiRingMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+        const zodiRing = new THREE.Mesh(zodiRingGeom, zodiRingMat);
+        zodiRing.rotation.x = Math.PI / 4; 
+        zodiRing.rotation.y = Math.PI / 4;
+        staticGeometryGroup.add(zodiRing);
+
+        // 3-Layered Spheres and Tetrahedrons
+        for (let i = 1; i <= 3; i++) {
+            const layerRadius = 8.5 * (i / 3); 
+            
+            const sphereGeom = new THREE.SphereGeometry(layerRadius, 16, 12);
+            const sphereMat = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.04 + (i * 0.02)
+            });
+            const layerSphere = new THREE.Mesh(sphereGeom, sphereMat);
+            staticGeometryGroup.add(layerSphere);
+
+            const tetraGeom = new THREE.TetrahedronGeometry(layerRadius * 0.95, 0); 
+            const tetraMat = new THREE.MeshBasicMaterial({ 
+                color: 0xffffff, wireframe: true, transparent: true, opacity: 0.10 + (i * 0.05) 
+            });
+            
+            const tetra1 = new THREE.Mesh(tetraGeom, tetraMat);
+            tetra1.rotation.x = Math.PI / 4;
+            staticGeometryGroup.add(tetra1);
+
+            const tetra2 = tetra1.clone();
+            tetra2.rotation.z = Math.PI;
+            staticGeometryGroup.add(tetra2);
+        }
+
+        // --- 3. Instantiating Archetypes ---
+        function createActor(size, color, emiColor = 0x000000) {
+            const geom = new THREE.SphereGeometry(size, 16, 16);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: color, roughness: 0.1, metalness: 0.9,
+                emissive: emiColor, emissiveIntensity: 0.6
+            });
+            return new THREE.Mesh(geom, mat);
+        }
+
+
+
+        //const sun = createActor(1.2, 0xffaa00, 0xff3300);
+        //engineGroup.add(sun);
+
+        // --- ESKİ "SUN" YERİNE OKTAHEDRON ÇEKİRDEK TASARIMI ---
+const coreGroup = new THREE.Group(); // Çekirdek grubu
+engineGroup.add(coreGroup);
+
+// Gönderdiğiniz yeşil piramit geometrisi (Oktahedron)
+const octaGeom = new THREE.OctahedronGeometry(1.4, 0); 
+const octaMat = new THREE.MeshStandardMaterial({ 
+    color: 0x00ff66,          // Şemanızdaki parlak yeşil
+    wireframe: false,         // Katı yüzey
+    transparent: true,
+    opacity: 0.7,             // Şeffaf iç çekirdek illüzyonu
+    roughness: 0.2,
+    metalness: 0.8,
+    emissive: 0x003311,
+    emissiveIntensity: 1.0
+});
+const coreOctahedron = new THREE.Mesh(octaGeom, octaMat);
+coreGroup.add(coreOctahedron);
+
+// Oktahedronun çizgisel kafesi (Kafes hatlarını belirginleştirmek için)
+const octaWireMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.4 });
+const coreWire = new THREE.Mesh(octaGeom, octaWireMat);
+coreGroup.add(coreWire);
+
+// Noktasal Kuantum Yükleri (6 Köşe Noktası)
+const vertexGeom = new THREE.SphereGeometry(0.12, 8, 8);
+const vertexMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+// Oktahedronun 6 ana koordinat noktasına parlayan küreler yerleştiriyoruz
+const localVertices = [
+    new THREE.Vector3(1, 0, 0),  new THREE.Vector3(-1, 0, 0),
+    new THREE.Vector3(0, 1, 0),  new THREE.Vector3(0, -1, 0),
+    new THREE.Vector3(0, 0, 1),  new THREE.Vector3(0, 0, -1) // (0,0,1) Nötr tepe noktası
+];
+
+localVertices.forEach(pos => {
+    const vMesh = new THREE.Mesh(vertexGeom, vertexMat);
+    vMesh.position.copy(pos).multiplyScalar(1.4); // Geometri boyutuyla ölçekleme
+    coreGroup.add(vMesh);
+});
+
+// Çekirdeği kendi eksenlerinde döndürerek nötr ve pozitif noktaların sürekli yer değiştirmesini sağlıyoruz
+coreGroup.rotation.x += 0.002;
+coreGroup.rotation.y += 0.004;
+
+        const jupiter = createActor(0.8, 0xffffff, 0xaaaaaa);
+        jupiter.position.set(0, 5.2, 0);
+        staticGeometryGroup.add(jupiter); 
+
+        const saturn = createActor(0.75, 0x151515, 0x050505);
+        saturn.position.set(0, -5.2, 0);
+        staticGeometryGroup.add(saturn);
+
+        const ringGeom = new THREE.RingGeometry(0.9, 1.4, 16); 
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x444444, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+        const saturnRing = new THREE.Mesh(ringGeom, ringMat);
+        saturnRing.rotation.x = Math.PI / 2;
+        saturn.add(saturnRing);
+
+        // Positive Wheel (Clockwise: 1 - 4 - 7)
+        const mercury = createActor(0.3, 0xff0000, 0x440000); 
+        const earth   = createActor(0.5, 0xffff00, 0x444400); 
+        const uranus  = createActor(0.55, 0x00aaff, 0x002244); 
+        engineGroup.add(mercury); engineGroup.add(earth); engineGroup.add(uranus);
+
+        // Negative Wheel (Counter-Clockwise: 2 - 8 - 5)
+        const venus   = createActor(0.45, 0xff7700, 0x442200); 
+        const mars    = createActor(0.4, 0x00ff00, 0x004400);  
+        const neptune = createActor(0.55, 0xaa00ff, 0x220044); 
+        engineGroup.add(venus); engineGroup.add(mars); engineGroup.add(neptune);
+
+        // --- 4. Animation Loop ---
+        let time = 0;
+        const clock = new THREE.Clock(); 
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            time += delta * 0.5; 
+
+            sun.rotation.y += 0.003;
+            jupiter.rotation.y += 0.006;
+            saturn.rotation.y -= 0.004;
+
+            const polarPulse = Math.sin(time * 0.5) * 0.12;
+            jupiter.position.y = 5.2 + polarPulse;
+            saturn.position.y = -5.2 - polarPulse;
+
+            // POSITIVE ARRAY (Clockwise Wheel)
+            const posRadius = 3.8; 
+            const posOffsetZ = 0.6; 
+            const posSpeed = time; 
+
+            mercury.position.set(Math.cos(posSpeed) * (posRadius - 1.4), 0, Math.sin(posSpeed) * (posRadius - 1.4) + posOffsetZ);
+            earth.position.set(Math.cos(posSpeed + (Math.PI * 2 / 3)) * posRadius, 0, Math.sin(posSpeed + (Math.PI * 2 / 3)) * posRadius + posOffsetZ);
+            uranus.position.set(Math.cos(posSpeed + (Math.PI * 4 / 3)) * (posRadius + 1.6), 0, Math.sin(posSpeed + (Math.PI * 4 / 3)) * (posRadius + 1.6) + posOffsetZ);
+
+            // NEGATIVE ARRAY (Counter-Clockwise Wheel)
+            const negRadius = 4.8;
+            const negOffsetZ = -0.6;
+            const negSpeed = -time; 
+
+            venus.position.set(Math.cos(negSpeed) * (negRadius - 1.2), 0, Math.sin(negSpeed) * (negRadius - 1.2) + negOffsetZ);
+            mars.position.set(Math.cos(negSpeed + (Math.PI * 2 / 3)) * negRadius, 0, Math.sin(negSpeed + (Math.PI * 2 / 3)) * negRadius + negOffsetZ);
+            neptune.position.set(Math.cos(negSpeed + (Math.PI * 4 / 3)) * (negRadius + 1.4), 0, Math.sin(negSpeed + (Math.PI * 4 / 3)) * (negRadius + 1.4) + negOffsetZ);
+
+            renderer.render(scene, camera);
+        }
+
+        // --- 5. Event Listeners (Window Resize & Key Controllers) ---
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.left = -d * aspect;
+            camera.right = d * aspect;
+            camera.top = d;
+            camera.bottom = -d;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Keydown Event Switcher
+        window.addEventListener('keydown', (event) => {
+            if (event.key === '1') {
+                switchView('isometric');
+            } else if (event.key === '2') {
+                switchView('top');
+            } else if (event.key === '3') {
+                switchView('bottom');
+            }
+        });
+
+        // Run Engine
+        animate();
+    </script>
+</body>
+</html>
