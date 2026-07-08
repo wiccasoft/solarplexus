@@ -173,3 +173,36 @@ geometryGroup.add(octaMesh, octaSolid);
 // ... (Yıldız parçacıkları oluşturma kodları)
 const starParticles = new THREE.Points(starsGeom, new THREE.PointsMaterial({color: 0xffffff, size: 0.08, transparent: true, opacity: 0.5}));
 scene.add(starParticles);
+// =============================================================
+// PARÇA 5: ANİMASYON, RENDER VE KAMERA BUTON DÖNGÜSÜ (FİNAL)
+// =============================================================
+
+// 4. Render/Animasyon Döngüsü
+function animate() {
+    requestAnimationFrame(animate);
+
+    // changeView butonlarına basıldığında kamerayı akıcı bir şekilde taşır (Lerp)
+    if (isAnimating) {
+        camera.position.lerp(targetPos, 0.05);
+        camera.lookAt(0, 0, 0);
+
+        // Hedefe yeterince yaklaşıldığında animasyonu durdur ve kontrolleri serbest bırak
+        if (camera.position.distanceTo(targetPos) < 0.01) {
+            camera.position.copy(targetPos);
+            isAnimating = false;
+        }
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+// 5. Pencere Boyutu Değiştiğinde Ekranı Otomatik Güncelleme
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Sistemi Başlat
+animate();
