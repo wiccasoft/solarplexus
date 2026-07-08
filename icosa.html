@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Kutsal Geometri - İç İçe Modeller</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #050505; }
+        canvas { display: block; }
+        
+        /* Minimalist Buton Arayüzü Tasarımı */
+        .ui-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .view-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            border: 1px rgba(255, 255, 255, 0.2) solid;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .view-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .view-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+    <!-- WebGL ve Geometrileri Çizen Ana Kütüphane -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.146/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@latest/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<!-- Kamera Açı Kontrol Butonları -->
+<div class="ui-container">
+    <button class="view-btn" onclick="changeView('top')">TOP VIEW (MANDALA)</button>
+    <button class="view-btn" onclick="changeView('bottom')">BOTTOM VIEW</button>
+    <button class="view-btn" onclick="changeView('reset')">PERSPECTIVE VIEW</button>
+</div>
+
+<!-- 2. Parçadaki JavaScript Kodları Buraya Gelecek -->
+<script src="icosa.js"></script>
+
+</body>
+</html>
