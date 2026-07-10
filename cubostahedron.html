@@ -9,11 +9,75 @@
   </style>
 </head>
 <body>
+<button onclick="setPoles('topBackLeft','bottomFrontRight')">Beyaz–Siyah</button>
+<button onclick="setPoles('topFrontRight','bottomBackLeft')">Kırmızı–Yeşil</button>
+<button onclick="setPoles('topFrontLeft','bottomBackRight')">Mavi–Turuncu</button>
+
 <script src="https://cdn.jsdelivr.net/npm/three@0.146/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.146/examples/js/controls/OrbitControls.js"></script>
 <script>
   const scene = new THREE.Scene();
 
+  let currentAxis; // sahnedeki aktif eksen
+
+
+function setPoles(northName, southName) {
+function setPoles(northName, southName) {
+  if (currentAxis) scene.remove(currentAxis);
+
+  const northSphere = scene.getObjectByName(northName);
+  const southSphere = scene.getObjectByName(southName);
+  if (!northSphere || !southSphere) return;
+
+  const northPos = northSphere.position;
+  const southPos = southSphere.position;
+
+  const direction = new THREE.Vector3().subVectors(northPos, southPos).normalize();
+  const centerPos = new THREE.Vector3().addVectors(northPos, southPos).multiplyScalar(0.5);
+
+  const length = 10;
+  const from = centerPos.clone().add(direction.clone().multiplyScalar(-length));
+  const to   = centerPos.clone().add(direction.clone().multiplyScalar(length));
+
+  const axisGeom = new THREE.BufferGeometry().setFromPoints([from,to]);
+  const axisMat = new THREE.LineBasicMaterial({color:0x00ff00});
+  currentAxis = new THREE.Line(axisGeom, axisMat);
+  scene.add(currentAxis);
+
+  // 🔑 Kamerayı yeni eksene hizala
+  camera.position.copy(centerPos.clone().add(direction.clone().multiplyScalar(10)));
+  camera.lookAt(centerPos);
+  controls.target.copy(centerPos);
+  controls.update();
+}
+
+  // Kutup kürelerini bul
+  const northSphere = scene.getObjectByName(northName);
+  const southSphere = scene.getObjectByName(southName);
+
+  if (!northSphere || !southSphere) {
+    console.warn("Küre bulunamadı:", northName, southName);
+    return;
+  }
+
+  // Pozisyonları al
+  const northPos = northSphere.position;
+  const southPos = southSphere.position;
+
+  // Çizgiyi uzatmak için doğrultu ve merkez
+  const direction = new THREE.Vector3().subVectors(northPos, southPos).normalize();
+  const centerPos = new THREE.Vector3().addVectors(northPos, southPos).multiplyScalar(0.5);
+
+  const length = 10;
+  const from = centerPos.clone().add(direction.clone().multiplyScalar(-length));
+  const to   = centerPos.clone().add(direction.clone().multiplyScalar(length));
+
+  // Yeni ekseni çiz
+  const axisGeom = new THREE.BufferGeometry().setFromPoints([from,to]);
+  const axisMat = new THREE.LineBasicMaterial({color:0x00ff00});
+  currentAxis = new THREE.Line(axisGeom, axisMat);
+  scene.add(currentAxis);
+}
   // Ortografik kamera
   const aspect = window.innerWidth / window.innerHeight;
   const d = 2;
@@ -32,6 +96,15 @@
   controls.enablePan = true;
   controls.enableZoom = true;
   controls.enableRotate = true;
+
+  
+
+  // Döndürme sınırlarını kaldır
+// Döndürme sınırlarını tamamen kaldır
+controls.minPolarAngle = -Infinity;
+controls.maxPolarAngle = Infinity;
+controls.minAzimuthAngle = -Infinity;
+controls.maxAzimuthAngle = Infinity;
 
   scene.add(new THREE.AmbientLight(0xffffff));
 
@@ -88,9 +161,22 @@
     const axisMat = new THREE.LineBasicMaterial({color:color});
     scene.add(new THREE.Line(axisGeom, axisMat));
   }
-  addAxis(0xff0000, new THREE.Vector3(-10,0,0), new THREE.Vector3(10,0,0));
-  addAxis(0x00ff00, new THREE.Vector3(0,-10,0), new THREE.Vector3(0,10,0));
-  addAxis(0x0000ff, new THREE.Vector3(0,0,-10), new THREE.Vector3(0,0,10));
+ // addAxis(0xff0000, new THREE.Vector3(-10,0,0), new THREE.Vector3(10,0,0));
+ // addAxis(0x00ff00, new THREE.Vector3(0,-10,0), new THREE.Vector3(0,10,0));
+ // addAxis(0x0000ff, new THREE.Vector3(0,0,-10), new THREE.Vector3(0,0,10));
+
+
+
+// Beyaz ve siyah kürelerin pozisyonları
+const whitePos = new THREE.Vector3(-0.25, 0.25, -0.25);
+const blackPos = new THREE.Vector3(0.25, -0.25, 0.25);
+
+
+// Yeşil eksen: beyaz ve siyah küreleri birleştiren çizgi
+addAxis(0x00ff00, blackPos, whitePos);
+
+
+
 
   // Merkezden köşelere çizgiler (beyaz)
   const center = new THREE.Vector3(0,0,0);
@@ -137,34 +223,85 @@
   addTetrahedron(tetra2, 0xaaaaaa);// Küre materyali (saydam)
 
   
-  // Küre materyali (saydam)
+const sphereRadius = 0.2; // küçük küreler küpün içine sığacak
+
+// 8 küre objesi (renkler doğru eşleşme ile)
+const spheres = [
+  {name:"topFrontRight",  pos:new THREE.Vector3( 0.25, 0.25,  0.25), color:0xff0000}, // kırmızı
+  {name:"topFrontLeft",   pos:new THREE.Vector3(-0.25, 0.25,  0.25), color:0x0000FF}, // mavi
+  {name:"topBackRight",   pos:new THREE.Vector3( 0.25, 0.25, -0.25), color:0xffff00}, // sarı
+  {name:"bottomFrontLeft",pos:new THREE.Vector3(-0.25,-0.25,  0.25), color:0x660099}, // mor
+  {name:"topBackLeft",    pos:new THREE.Vector3(-0.25, 0.25, -0.25), color:0xffffff}, // beyaz
+  {name:"bottomFrontRight",pos:new THREE.Vector3( 0.25,-0.25,  0.25), color:0x000000}, // siyah
+  {name:"bottomBackRight",pos:new THREE.Vector3( 0.25,-0.25, -0.25), color:0xff6600}, // turuncu
+  {name:"bottomBackLeft", pos:new THREE.Vector3(-0.25,-0.25, -0.25), color:0x00ff00}  // yeşil
+];
+
+
+
+// Sahneye ekleme
+spheres.forEach(s=>{
+  const geom = new THREE.SphereGeometry(sphereRadius, 32, 32);
+  const mat = new THREE.MeshPhongMaterial({
+    color: s.color,
+    emissive: s.color,
+    emissiveIntensity: 0.5
+  });
+  const sphere = new THREE.Mesh(geom, mat);
+  sphere.position.copy(s.pos);
+  sphere.name = s.name; // obje adı
+  scene.add(sphere);
+});
+
+// Küre materyali (saydam)
 const sphereMaterial = new THREE.MeshPhongMaterial({
   color: 0xffffff,
   transparent: true,
   opacity: 0.25
 });
 
-// 8 köşeye küreler
-corners.forEach(corner => {
-  const sphereGeom = new THREE.SphereGeometry(0.1, 16, 16);
-  const sphere = new THREE.Mesh(sphereGeom, sphereMaterial.clone());
-  sphere.position.copy(corner);
-  scene.add(sphere);
-});
-
-// Merkezde 9. küre
-const centerSphereGeom = new THREE.SphereGeometry(0.15, 16, 16);
+// Merkezde ana küre
+const centerSphereGeom = new THREE.SphereGeometry(0.3, 32, 32);
 const centerSphereMat = new THREE.MeshPhongMaterial({
-  color: 0xff00ff, // mor/beyaz denge
+  color: 0xffffff,
   emissive: 0xff00ff,
   emissiveIntensity: 0.6,
   transparent: true,
-  opacity: 0.5
+  opacity: 0.4
 });
+
 const centerSphere = new THREE.Mesh(centerSphereGeom, centerSphereMat);
 centerSphere.position.set(0,0,0);
 scene.add(centerSphere);
 
+// 6 küreyi etrafına yerleştir
+const offsets = [
+  new THREE.Vector3(0.5,0,0),   // sağ
+  new THREE.Vector3(-0.5,0,0),  // sol
+  new THREE.Vector3(0,0.5,0),   // üst
+  new THREE.Vector3(0,-0.5,0),  // alt
+  new THREE.Vector3(0,0,0.5),   // ön
+  new THREE.Vector3(0,0,-0.5)   // arka
+];
+
+offsets.forEach(pos => {
+  const sphereGeom = new THREE.SphereGeometry(0.3, 32, 32);
+  const sphere = new THREE.Mesh(sphereGeom, sphereMaterial.clone());
+  sphere.position.copy(pos);
+  scene.add(sphere);
+});
+
+
+// Top view butonu için
+function setTopView(camera, controls) {
+  // Kamerayı yukarıya sabitle
+  camera.position.set(0, 10, 0); 
+  camera.lookAt(0, 0, 0);
+
+  // Eğer OrbitControls kullanıyorsan:
+  controls.target.set(0, 0, 0);
+  controls.update();
+}
 
   function animate() {
     requestAnimationFrame(animate);
