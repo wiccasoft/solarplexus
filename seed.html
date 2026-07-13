@@ -40,6 +40,7 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+        // --- 1. SAHNE VE ARKA PLAN ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x000000); 
 
@@ -50,10 +51,11 @@
         const clock = new THREE.Clock();
         const TOTAL_CYCLE = 13.0; 
 
+        // --- 2. 3 FARKLI KAMERA REJİSİ ---
         const cameraPositions = [
-            { x: 0, y: 25, z: 0 },  
-            { x: 0, y: 1, z: 8 },   
-            { x: 12, y: 10, z: 12 }  
+            { x: 0, y: 25, z: 0 },  // 1. Tepe Bakışı (Yaşam Çiçeği)
+            { x: 0, y: 1, z: 8 },   // 2. Çekirdek Açısı (Kırmızı-Yeşil)
+            { x: 12, y: 10, z: 12 }  // 3. Dinamik Göz (Orbit)
         ];
         let camIndex = 0;
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -69,16 +71,66 @@
             camera.lookAt(0, 0, 0);
         });
 
+        // --- 3. KOORDİNATLARI TAM VE EKSİKSİZ ADRESLİ ODALAR ---
         const nodes = [
-            { id: "beyaz",    pos:,   color: 0xffffff, originalColor: 0xffffff },
+            { id: "beyaz",    pos: [0, 4, 0],   color: 0xffffff, originalColor: 0xffffff },
             { id: "siyah",    pos: [0, -4, 0],  color: 0x222222, originalColor: 0x222222 },
-            { id: "kirmizi",  pos:,   color: 0xff0000, originalColor: 0xff0000 },
+            { id: "kirmizi",  pos: [0, 2, 0],   color: 0xff0000, originalColor: 0xff0000 },
             { id: "yesil",    pos: [0, 0, -2],  color: 0x00ff00, originalColor: 0x00ff00 },   
-            { id: "turuncu",  pos:,   color: 0xffa500, originalColor: 0xffa500 },
+            { id: "turuncu",  pos: [4, 1, 0],   color: 0xffa500, originalColor: 0xffa500 },
             { id: "mavi",     pos: [-4, -1, -2],color: 0x0000ff, originalColor: 0x0000ff },
             { id: "sari",     pos: [3, -1, 2],  color: 0xffff00, originalColor: 0xffff00 },
             { id: "mor",      pos: [-3, 2, -2], color: 0x800080, originalColor: 0x800080 }
         ];
+
+
+
+        // --- DOĞAL GLUON İSKELET HATLARI (PÜRÜZSÜZ ENERJİ OMURGASI) ---
+const skeletonSegments = 120; // Eğrinin pürüzsüz olması için segment sayısını artırdık
+const matW = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.5, linewidth: 2 });
+const matTW = new THREE.LineBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.5, linewidth: 2 });
+
+const geoW = new THREE.BufferGeometry();
+const ptsW = []; for(let i=0; i<=skeletonSegments; i++) ptsW.push(new THREE.Vector3());
+geoW.setFromPoints(ptsW);
+const lineW = new THREE.Line(geoW, matW); scene.add(lineW);
+
+const geoTW = new THREE.BufferGeometry();
+const ptsTW = []; for(let i=0; i<=skeletonSegments; i++) ptsTW.push(new THREE.Vector3());
+geoTW.setFromPoints(ptsTW);
+const lineTW = new THREE.Line(geoTW, matTW); scene.add(lineTW);
+
+
+// --- DOĞAL W VE TERS W GEOMETRİK ENERJİ İSKELETİ GÜNCELLEMESİ ---
+const arrayW = lineW.geometry.attributes.position.array;
+const arrayTW = lineTW.geometry.attributes.position.array;
+const sY = -4; // Siyah Oda (Güney)
+const eY = 4;  // Beyaz Oda (Kuzey)
+
+for (let i = 0; i <= skeletonSegments; i++) {
+    const ratio = i / skeletonSegments; 
+    const currentY = THREE.MathUtils.lerp(sY, eY, ratio);
+
+    // DOĞAL GEOMETRİ: Yapay kırılma yok. Pürüzsüz genişleme ve daralma matrisi
+    // Eksen boyunca enerjinin düğüm noktalarından (organik boğumlardan) geçmesini sağlar
+    const radW = (0.7 - Math.cos(ratio * Math.PI * 2) * 0.8) * 1.5;
+
+    // Siyah'tan Beyaz'a Saat Yönünün Tersine (Counter-Clockwise) Doğal Sarmal Akış
+    const angW = -ratio * Math.PI * 6 - elapsed * 1.8;
+    const angTW = angW + Math.PI; // Tam 180 derece karşıtlık fazı (Zıtların Birliği)
+
+    // Organik W Noktaları
+    arrayW[i * 3]     = Math.cos(angW) * radW;
+    arrayW[i * 3 + 1] = currentY;
+    arrayW[i * 3 + 2] = Math.sin(angW) * radW;
+
+    // Organik Ters W Noktaları
+    arrayTW[i * 3]     = Math.cos(angTW) * radW;
+    arrayTW[i * 3 + 1] = currentY;
+    arrayTW[i * 3 + 2] = Math.sin(angTW) * radW;
+}
+lineW.geometry.attributes.position.needsUpdate = true;
+lineTW.geometry.attributes.position.needsUpdate = true;
 
         const nodeMeshes = {};
         nodes.forEach(n => {
@@ -90,23 +142,7 @@
             nodeMeshes[n.id] = sphere;
         });
 
-        // --- ENERJİNİN DAİMİ İSKELETİ (W VE TERS W GEOMETRİSİ) ---
-        const skeletonSegments = 80;
-        const matW = new THREE.LineBasicMaterial({ color: 0x3366ff, transparent: true, opacity: 0.4 });
-        const matTW = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.4 });
-
-        const geoW = new THREE.BufferGeometry();
-        const ptsW = []; for(let i=0; i<=skeletonSegments; i++) ptsW.push(new THREE.Vector3());
-        geoW.setFromPoints(ptsW);
-        const lineW = new THREE.Line(geoW, matW); scene.add(lineW);
-
-        const geoTW = new THREE.BufferGeometry();
-        const ptsTW = []; for(let i=0; i<=skeletonSegments; i++) ptsTW.push(new THREE.Vector3());
-        geoTW.setFromPoints(ptsTW);
-        const lineTW = new THREE.Line(geoTW, matTW); scene.add(lineTW);
-
-
-         // --- PARÇA 2: YAŞAM ÇİÇEĞİ KATMANI VE AKSİYON DÖNGÜSÜ ---
+        // Tepede asilce dönecek olan Yaşam Çiçeği katmanı
         const flowerGroup = new THREE.Group();
         flowerGroup.position.y = 6;
         scene.add(flowerGroup);
@@ -121,6 +157,7 @@
             flowerGroup.add(ring);
         }
 
+        // --- 4. SİNYAL DATA PAKETİ VE DALGA BOYU SİSTEMİ ---
         let aktifPaket = null;
 
         const spiralGeometry = new THREE.BufferGeometry();
@@ -131,6 +168,7 @@
         const spiralLine = new THREE.Line(spiralGeometry, spiralMaterial);
         scene.add(spiralLine);
 
+        // Paket Tetikleme Dinamikleri (174 +Yük / 285 -Yük)
         document.getElementById('btn-174').addEventListener('click', () => {
             aktifPaket = { frekans: 174, yuk: 1, aci: (174 / 360) * Math.PI * 2, odalar: ["kirmizi", "mavi", "sari"] };
             document.getElementById('packet-info').innerText = "174 Hz (+ Yük) Aktif";
@@ -143,61 +181,34 @@
             spiralLine.material.color.setHex(0xff0055);
         });
 
+        // --- 5. 12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
         function animate() {
             requestAnimationFrame(animate);
 
             const elapsed = clock.getElapsedTime();
             const cycleTime = elapsed % TOTAL_CYCLE;
             const progress = cycleTime / TOTAL_CYCLE;
-            const currentStage = Math.floor(progress * 12) + 1; 
+            const currentStage = Math.floor(progress * 12) + 1; // 12 Aşama Sabitlendi
 
             document.getElementById("time").innerText = cycleTime.toFixed(2);
             document.getElementById("stage").innerText = currentStage;
 
-            // --- W VE TERS W GEOMETRİK ENERJİ İSKELETİ GÜNCELLEMESİ ---
-            const arrayW = lineW.geometry.attributes.position.array;
-            const arrayTW = lineTW.geometry.attributes.position.array;
-            const sY = -4; 
-            const eY = 4;   
-
-            for (let i = 0; i <= skeletonSegments; i++) {
-                const ratio = i / skeletonSegments; 
-                const currentY = THREE.MathUtils.lerp(sY, eY, ratio);
-
-                // Katlanma matrisi: Dikey kesitte tam bir W ve Ters W formu üretir
-                const radW = Math.abs(Math.sin(ratio * Math.PI * 2)) * 1.5;
-
-                // Saat yönünün tersine (Counter-Clockwise) kiralite akışı
-                const angW = -ratio * Math.PI * 6 - elapsed * 2.0;
-                const angTW = angW + Math.PI; 
-
-                arrayW[i * 3]     = Math.cos(angW) * radW;
-                arrayW[i * 3 + 1] = currentY;
-                arrayW[i * 3 + 2] = Math.sin(angW) * radW;
-
-                arrayTW[i * 3]     = Math.cos(angTW) * radW;
-                arrayTW[i * 3 + 1] = currentY;
-                arrayTW[i * 3 + 2] = Math.sin(angTW) * radW;
-            }
-            lineW.geometry.attributes.position.needsUpdate = true;
-            lineTW.geometry.attributes.position.needsUpdate = true;
-
-            // --- SİNYAL AKIŞININ GÜNCELLEMESİ ---
+            // Paket iplerde ilerlerken dalga boyunu bükme mekanizması
             if (aktifPaket) {
                 spiralLine.material.opacity = 0.9;
                 const positions = spiralLine.geometry.attributes.position.array;
                 
-                const start = new THREE.Vector3(0, -4, 0); // Siyah Oda (Aşağı)
-                const end = new THREE.Vector3(0, 4, 0);    // Beyaz Oda (Yukarı)
+                const start = new THREE.Vector3(0, 4, 0); 
+                const end = new THREE.Vector3(0, -4, 0);  
 
                 for (let i = 0; i <= 60; i++) {
                     const t = i / 60;
                     const currentPoint = new THREE.Vector3().lerpVectors(start, end, t);
                     
-                    // Saat yönünün tersine girdap bükülmesi
+                    // Elektrik yüküne bağlı ters bükülme simetrisi
                     const angle = aktifPaket.yuk === 1 ? 
-                        (-t * Math.PI * 6 - progress * aktifPaket.aci * 10) : 
-                        (t * Math.PI * 6 + progress * aktifPaket.aci * 10);
+                        (t * Math.PI * 6 + progress * aktifPaket.aci * 10) : 
+                        (-t * Math.PI * 6 - progress * aktifPaket.aci * 10);
                         
                     const radius = Math.sin(t * Math.PI) * 1.2; 
                     
@@ -210,13 +221,16 @@
                 }
                 spiralLine.geometry.attributes.position.needsUpdate = true;
 
+                // Elektrik yükünün odayı "Ters" ya da "Düz" yakma simülasyonu
                 const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
                 nodes.forEach(n => {
                     if (nodeMeshes[n.id]) {
                         if (aktifPaket.odalar.includes(n.id)) {
                             if (aktifPaket.yuk === -1) {
+                                // NEGATİF YÜK (285): Odaları ters yakar (Anti-faz sönümleme)
                                 nodeMeshes[n.id].material.color.setRGB(0.1 * heartbeat, 0.02 * heartbeat, 0.1 * heartbeat);
                             } else {
+                                // POZİTİF YÜK (174): Odaları orijinal spektrumunda parlak ateşler
                                 nodeMeshes[n.id].material.color.setHex(n.originalColor);
                             }
                         }
@@ -224,8 +238,8 @@
                 });
             }
 
-            // Saat yönünün tersine asilce dönen tepe Yaşam Çiçeği
-            flowerGroup.rotation.y = -elapsed * 0.15; 
+            // Tepe katmandaki Yaşam Çiçeği asilce döner
+            flowerGroup.rotation.y = elapsed * 0.15; 
 
             if (camIndex === 2) controls.update();
             renderer.render(scene, camera);
