@@ -101,36 +101,7 @@ geoTW.setFromPoints(ptsTW);
 const lineTW = new THREE.Line(geoTW, matTW); scene.add(lineTW);
 
 
-// --- DOĞAL W VE TERS W GEOMETRİK ENERJİ İSKELETİ GÜNCELLEMESİ ---
-const arrayW = lineW.geometry.attributes.position.array;
-const arrayTW = lineTW.geometry.attributes.position.array;
-const sY = -4; // Siyah Oda (Güney)
-const eY = 4;  // Beyaz Oda (Kuzey)
 
-for (let i = 0; i <= skeletonSegments; i++) {
-    const ratio = i / skeletonSegments; 
-    const currentY = THREE.MathUtils.lerp(sY, eY, ratio);
-
-    // DOĞAL GEOMETRİ: Yapay kırılma yok. Pürüzsüz genişleme ve daralma matrisi
-    // Eksen boyunca enerjinin düğüm noktalarından (organik boğumlardan) geçmesini sağlar
-    const radW = (0.7 - Math.cos(ratio * Math.PI * 2) * 0.8) * 1.5;
-
-    // Siyah'tan Beyaz'a Saat Yönünün Tersine (Counter-Clockwise) Doğal Sarmal Akış
-    const angW = -ratio * Math.PI * 6 - elapsed * 1.8;
-    const angTW = angW + Math.PI; // Tam 180 derece karşıtlık fazı (Zıtların Birliği)
-
-    // Organik W Noktaları
-    arrayW[i * 3]     = Math.cos(angW) * radW;
-    arrayW[i * 3 + 1] = currentY;
-    arrayW[i * 3 + 2] = Math.sin(angW) * radW;
-
-    // Organik Ters W Noktaları
-    arrayTW[i * 3]     = Math.cos(angTW) * radW;
-    arrayTW[i * 3 + 1] = currentY;
-    arrayTW[i * 3 + 2] = Math.sin(angTW) * radW;
-}
-lineW.geometry.attributes.position.needsUpdate = true;
-lineTW.geometry.attributes.position.needsUpdate = true;
 
         const nodeMeshes = {};
         nodes.forEach(n => {
@@ -183,6 +154,37 @@ lineTW.geometry.attributes.position.needsUpdate = true;
 
         // --- 5. 12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
         function animate() {
+
+
+
+            // --- DOĞAL W VE TERS W ENERJİ İSKELETİ GÜNCELLEMESİ (BURAYA EKLENECEK) ---
+const arrayW = lineW.geometry.attributes.position.array;
+const arrayTW = lineTW.geometry.attributes.position.array;
+const sY = -4; 
+const eY = 4;
+
+for (let i = 0; i <= skeletonSegments; i++) {
+    const ratio = i / skeletonSegments;
+    const currentY = THREE.MathUtils.lerp(sY, eY, ratio);
+
+    // Organik dalga boyu boğumları
+    const radW = (0.7 - Math.cos(ratio * Math.PI * 2) * 0.8) * 1.5;
+
+    // Siyah'tan Beyaz'a Saat Yönünün Tersine Kusursuz Akış
+    const angW = -ratio * Math.PI * 6 - elapsed * 1.8;
+    const angTW = angW + Math.PI; 
+
+    arrayW[i * 3]     = Math.cos(angW) * radW;
+    arrayW[i * 3 + 1] = currentY;
+    arrayW[i * 3 + 2] = Math.sin(angW) * radW;
+
+    arrayTW[i * 3]     = Math.cos(angTW) * radW;
+    arrayTW[i * 3 + 1] = currentY;
+    arrayTW[i * 3 + 2] = Math.sin(angTW) * radW;
+}
+lineW.geometry.attributes.position.needsUpdate = true;
+lineTW.geometry.attributes.position.needsUpdate = true;
+
             requestAnimationFrame(animate);
 
             const elapsed = clock.getElapsedTime();
