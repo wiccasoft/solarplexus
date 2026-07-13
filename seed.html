@@ -153,25 +153,30 @@ const lineTW = new THREE.Line(geoTW, matTW); scene.add(lineTW);
         });
 
         // --- 5. 12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
-        function animate() {
+function animate() {
     requestAnimationFrame(animate);
-
-    // Zamanlayıcı tanımı üste alındı (Siyah ekranı çözen düzeltme)
     const elapsed = clock.getElapsedTime();
-    // ... (Kritik mantık güncellemeleri ve Three.js güncellemeleri)
-    
-    // Yörünge, sinyal akışı ve renk yönetimi eklendi
-    // W/TW İskeleti, spiral, düğüm renkleri ve kamera güncellemeleri
-    
-    flowerGroup.rotation.y = -elapsed * 0.15; // Saat yönü tersi dönen tepe
+    const cycleTime = elapsed % TOTAL_CYCLE;
+    const progress = cycleTime / TOTAL_CYCLE;
+    // ... (zamanlayıcı kodları) ...
+
+    // --- DOĞAL W VE TERS W GEOMETRİK ENERJİ İSKELETİ ---
+    // ... (pozisyon hesaplama döngüsü) ...
+    lineW.geometry.attributes.position.needsUpdate = true;
+    lineTW.geometry.attributes.position.needsUpdate = true
+
+  // --- SİNYAL AKIŞI VE RİTM (1. Parçanın altına ekleyin) ---
+    if (aktifPaket) {
+        // ... (paket ve spiral hesaplamaları) ...
+        spiralLine.geometry.attributes.position.needsUpdate = true;
+
+        // ... (kalp atışı efekti) ...
+    }
+
+    flowerGroup.rotation.y = -elapsed * 0.15; 
     if (camIndex === 2) controls.update();
     renderer.render(scene, camera);
 }
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
 
         animate();
     </script>
