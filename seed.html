@@ -153,31 +153,20 @@ const lineTW = new THREE.Line(geoTW, matTW); scene.add(lineTW);
         });
 
         // --- 5. 12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
- function animate() {
-     requestAnimationFrame(animate);
-     const elapsed = clock.getElapsedTime();
-     // ... W/Ters W İskelet ve Ritim Hesaplamaları ...
-     for (let i = 0; i <= skeletonSegments; i++) {
-         const ratio = i / skeletonSegments;
-         // ... Pozisyon ve Açı Hesaplamaları ...
-         arrayW[i * 3]     = Math.cos(angW) * radW;
-         arrayW[i * 3 + 1] = currentY;
-         arrayW[i * 3 + 2] = Math.sin(angW) * radW;
-     }
-     lineW.geometry.attributes.position.needsUpdate = true;
-     lineTW.geometry.attributes.position.needsUpdate = true;
-     if (aktifPaket) {
-         // ... Spiral/Girdap ve Render İşlemleri ...
-         for (let i = 0; i <= 60; i++) {
-            const t = i / 60;
-             const currentPoint = new THREE.Vector3().lerpVectors(start, end, t);
-             positions[i * 3] = currentPoint.x;
-             // ... Pozisyon Güncellemeleri ...
-         }
-     }
-     flowerGroup.rotation.y = -elapsed * 0.15;
-     renderer.render(scene, camera);
- }
+function animate() {
+    requestAnimationFrame(animate);
+    const elapsed = clock.getElapsedTime(), cycleTime = elapsed % TOTAL_CYCLE, progress = cycleTime / TOTAL_CYCLE;
+    document.getElementById("time").innerText = cycleTime.toFixed(2);
+    document.getElementById("stage").innerText = Math.floor(progress * 12) + 1;
+    const arrayW = lineW.geometry.attributes.position.array, arrayTW = lineTW.geometry.attributes.position.array;
+    for (let i = 0; i <= skeletonSegments; i++) {
+        const ratio = i / skeletonSegments, currentY = THREE.MathUtils.lerp(-4, 4, ratio), radW = (0.7 - Math.cos(ratio * Math.PI * 2) * 0.8) * 1.5, angW = -ratio * Math.PI * 6 - elapsed * 1.8;
+        arrayW[i * 3] = Math.cos(angW) * radW; arrayW[i * 3 + 1] = currentY; arrayW[i * 3 + 2] = Math.sin(angW) * radW;
+        arrayTW[i * 3] = Math.cos(angW + Math.PI) * radW; arrayTW[i * 3 + 1] = currentY; arrayTW[i * 3 + 2] = Math.sin(angW + Math.PI) * radW;
+    }
+    lineW.geometry.attributes.position.needsUpdate = lineTW.geometry.attributes.position.needsUpdate = true;
+
+}
 
 
         animate();
