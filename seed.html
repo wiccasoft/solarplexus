@@ -164,47 +164,7 @@ nodes.forEach(n => {
     nodeMeshes[n.id] = sphere; // Mekanizmanın odaları bulmasını sağlayan kilit satır
 });
 
-       // --- SPİNİN YARATTIĞI DOĞAL EYLEM (ODALARIN KENDİLİĞİNDEN PARLAMASI) ---
-nodes.forEach(n => {
-    if (nodeMeshes[n.id]) {
-        const mesh = nodeMeshes[n.id];
-        
-        // Odaların merkez eksenden olan radyal açısını buluyoruz
-        const roomAngle = Math.atan2(mesh.position.z, mesh.position.x);
-        
-        // Girdabın o andaki dönüş açısı (angW fonksiyonu ile birebir senkronize)
-        const vortexAngle = -elapsed * 1.8; 
-        
-        // DOĞAL ETKİLEŞİM: İskeletin sarmal kolları oda açısına yaklaştıkça oda doğal olarak parlar
-        // Math.cos farkı 1'e yaklaştıkça odanın ışığı kendiliğinden tetiklenir
-        const proximity = Math.cos(roomAngle - vortexAngle);
-        
-        // 12 Aşamanın kalp atışı ritmi (Nefes alma frekansı)
-        const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
-        
-        // Odaların ışığını girdabın spini ve kalp atışının kesişimiyle DOĞAL yakıyoruz
-        const intensity = (0.3 + proximity * 0.7) * (0.5 + heartbeat * 0.5);
-        
-        // Siyah ve Yeşil odalar merkez aksında (0,0) olduğu için açıyla değil, 
-        // doğrudan 12 aşamanın ritmik dalga boyuyla (kalp atışıyla) uyanır
-        if (n.id === "siyah" || n.id === "beyaz" || n.id === "kirmizi" || n.id === "yesil") {
-            mesh.material.color.setHex(n.originalColor);
-            mesh.scale.setScalar(0.8 + heartbeat * 0.3);
-        } else {
-            // Etraftaki dönen odalar girdap kollarına göre doğal olarak parlar
-            mesh.material.color.setRGB(
-                ((n.originalColor >> 16) & 255) / 255 * intensity,
-                ((n.originalColor >> 8) & 255) / 255 * intensity,
-                (n.originalColor & 255) / 255 * intensity
-            );
-            
-            // Spin kuvvetiyle odalar merkez etrafında çok hafifçe dairesel salınım yapar
-            const orbitRadius = Math.sqrt(n.pos[0]*n.pos[0] + n.pos[2]*n.pos[2]);
-            mesh.position.x = Math.cos(roomAngle + elapsed * 0.2) * orbitRadius;
-            mesh.position.z = Math.sin(roomAngle + elapsed * 0.2) * orbitRadius;
-        }
-    }
-});
+ 
         // Tepede asilce dönecek olan Yaşam Çiçeği katmanı
         const flowerGroup = new THREE.Group();
         flowerGroup.position.y = 6;
