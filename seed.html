@@ -365,8 +365,16 @@ function animate() {
     });
 
     if (controls) controls.update();
-    renderer.render(scene, camera);
-  animate();
+   renderer.render(scene, camera);
+} // 'animate' fonksiyonunun TEK ve GERÇEK nihai mühür kapanışı!
+
+// Dosya yüklendiğinde otomatik olarak ilk paketi zincire sokan tetikleyici
+// 174 Pozitif (+) yükü Kırmızı'dan başlatıp Beyaz'a doğru 3D vektörle fırlatır
+setTimeout(() => {
+    aktifPaketler.push(new KuantumPaketi("topFrontRight", "topBackLeft", 174));
+}, 1000);
+
+animate();
 </script>
 </body>
 </html>
