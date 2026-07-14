@@ -290,53 +290,25 @@ function animate() {
     renderer.render(scene, camera);
 } // 'function animate()' döngüsünün pürüzsüz nihai kapanışı!
 
-// --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU ---
-if (nodeMeshes["siyah"] && nodeMeshes["beyaz"] && nodeMeshes["kirmizi"] && nodeMeshes["yesil"]) {
-    const posSiyah = nodeMeshes["siyah"].position;   // Canlı Güney kutup noktası
-    const posBeyaz = nodeMeshes["beyaz"].position;   // Canlı Kuzey kutup noktası
-    const posKirmizi = nodeMeshes["kirmizi"].position; // Canlı Kırmızı eksen başı
-    const posYesil = nodeMeshes["yesil"].position;   // Canlı Yeşil denge köprüsü
-
-    for (let i = 0; i <= skeletonSegments; i++) {
-        const ratio = i / skeletonSegments;
-        
-        // AKIMIN GEOMETRİK YOLU DOĞRUDAN CANLI ODALARIN ÜZERİNDEN ÖRÜLÜYOR:
-        // Hat W: Siyah'tan doğup Kırmızı ve Yeşil eksenini dolanarak Beyaz'a kilitlenir
-        const currentY_W = THREE.MathUtils.lerp(posSiyah.y, posBeyaz.y, ratio);
-        const currentY_TW = THREE.MathUtils.lerp(posSiyah.y, posBeyaz.y, ratio);
-
-// Akımın genişliği (genliği) Sarı ve Mor odaların canlı uzaklıklarına bağlandı
-        let dinamikYaricap = 1.5;
-        if(nodeMeshes["sari"] && nodeMeshes["mor"]) {
-            const posSari = nodeMeshes["sari"].position;
-            dinamikYaricap = Math.sqrt(posSari.x * posSari.x + posSari.z * posSari.z);
+// --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU (İŞLEVSEL ALANA ALINDI) ---
+    if (nodeMeshes["siyah"] && nodeMeshes["beyaz"]) {
+        const posS = nodeMeshes["siyah"].position, posB = nodeMeshes["beyaz"].position; 
+        for (let i = 0; i <= skeletonSegments; i++) {
+            const r = i / skeletonSegments, crY = THREE.MathUtils.lerp(posS.y, posB.y, r);
+            let dY = 1.5;
+            if(nodeMeshes["sari"]) dY = Math.sqrt(nodeMeshes["sari"].position.x**2 + nodeMeshes["sari"].position.z**2);
+            const radW = (0.5 - Math.cos(r * Math.PI * 2) * 0.7) * dY;
+            arrayW[i*3] = Math.cos(angW)*radW + THREE.MathUtils.lerp(posS.x, posB.x, r);
+            arrayW[i*3+1] = crY;
+            arrayW[i*3+2] = Math.sin(angW)*radW + THREE.MathUtils.lerp(posS.z, posB.z, r);
         }
-        const radW = (0.5 - Math.cos(ratio * Math.PI * 2) * 0.7) * dinamikYaricap;
-
-        // Odaların dönüşü aksın spin açısını ve kiralite bükülmesini doğrudan belirler
-        const angW = -ratio * Math.PI * 6 - aksSpini + frekansInvert_Beyaz;
-        const angTW = ratio * Math.PI * 6 + aksSpini + frekansInvert_Siyah;
-
-        arrayW[i * 3] = Math.cos(angW) * radW + THREE.MathUtils.lerp(posSiyah.x, posBeyaz.x, ratio);
-        arrayW[i * 3 + 1] = currentY_W;
-        arrayW[i * 3 + 2] = Math.sin(angW) * radW + THREE.MathUtils.lerp(posSiyah.z, posBeyaz.z, ratio);
-
-        arrayTW[i * 3] = Math.cos(angTW) * radW + THREE.MathUtils.lerp(posSiyah.x, posBeyaz.x, ratio);
-        arrayTW[i * 3 + 1] = currentY_TW;
-        arrayTW[i * 3 + 2] = Math.sin(angTW) * radW + THREE.MathUtils.lerp(posSiyah.z, posBeyaz.z, ratio);
     }
-
-    
-// DOĞRU VE MÜHÜRLÜ DİZİLİM (BUNUNLA DEĞİŞTİRİN):
-        } // 'for' döngüsünün kapanışı
-     // 'if (nodeMeshes...)' bloğunun kapanışı
-
-    // Kapanış fonksiyonları 'animate' fonksiyonunun güvenli sınırları içine alındı
     flowerGroup.rotation.y = -elapsed * 0.15;
     if (camIndex === 2) controls.update();
     renderer.render(scene, camera);
-} // 'function animate()' döngüsünün pürüzsüz nihai kapanışı!
-    animate();
-    </script>
+} // animate() kapanışı
+
+animate();
+</script>
 </body>
 </html>
