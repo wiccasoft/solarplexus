@@ -236,6 +236,26 @@ nodes.forEach(n => {
 
 
 
+        class KozmikVeriPaketi {
+    constructor(originRoom, targetRoom, frekansGrubu) {
+        this.origin = originRoom;       // Bilginin çıktığı kaynak oda adresi
+        this.target = targetRoom;       // Bilginin ulaştığı alıcı oda adresi
+        
+        // --- SPEKTRUM VE ENERJİ SEVİYESİ VERİSİ ---
+        this.frekansNumarasi = frekansGrubu; // 174 (Negatif) veya 285 (Pozitif)
+        this.dalgaBoyuIsareti = frekansGrubu === 174 ? -1 : 1; // (- / +) kutupsallık yükü
+
+        // --- 3 BOYUTLU VEKTÖR VE YÖNELİM BİLGİSİ ---
+        // Çıkış vektörü: Akımın dikeyde (Aşağı/Yukarı) ve yatayda (Sağ/Sol) hangi aksa fışkırdığı
+        this.yonVektoru = new THREE.Vector3(0, 0, 0); 
+        
+        // --- 3 VE 6 SPİN AKS ENERJİ REJİSİ ---
+        this.kiraliteSpini = 0;         // Ulaştığı odanın dişlisini döndüreceği yön bilgisi
+        this.isLocked = true;           // Beyaz/Siyah invertörler tarafından odada tutulma kilidi
+    }
+}
+
+
 
         // --- 5. 12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
 function animate() {
