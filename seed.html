@@ -280,13 +280,17 @@ if (nodeMeshes["siyah"] && nodeMeshes["beyaz"] && nodeMeshes["kirmizi"] && nodeM
         arrayTW[i * 3 + 1] = currentY_TW;
         arrayTW[i * 3 + 2] = Math.sin(angTW) * radW + THREE.MathUtils.lerp(posSiyah.z, posBeyaz.z, ratio);
     }
-}
-    
 
-    flowerGroup.rotation.y = -elapsed * 0.15; 
+    
+// DOĞRU VE MÜHÜRLÜ DİZİLİM (BUNUNLA DEĞİŞTİRİN):
+        } // 'for' döngüsünün kapanışı
+    } // 'if (nodeMeshes...)' bloğunun kapanışı
+
+    // Kapanış fonksiyonları 'animate' fonksiyonunun güvenli sınırları içine alındı
+    flowerGroup.rotation.y = -elapsed * 0.15;
     if (camIndex === 2) controls.update();
     renderer.render(scene, camera);
-}
+} // 'function animate()' döngüsünün pürüzsüz nihai kapanışı!
     animate();
     </script>
 </body>
