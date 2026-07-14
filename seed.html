@@ -94,12 +94,10 @@ function setPoles(northName, southName) {
   camera.position.set(5, 5, 5);
   camera.lookAt(0, 0, 0);
 
-  // DOĞRU VE EKSİKSİZ ZAMANLAYICI ALANI (BUNUNLA DEĞİŞTİRİN):
+// DÜZELTİLMİŞ VE SAF MOTOR ALANI (BUNUNLA DEĞİŞTİRİN):
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-const clock = new THREE.Clock();
-const TOTAL_CYCLE = 13.0; // Eksik olan döngü zamanlayıcısı eklendi!
+// Mükerrer appendChild engeli elendi, saat ve döngü kilitlendi
 
   // OrbitControls → pan ve zoom açık
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
