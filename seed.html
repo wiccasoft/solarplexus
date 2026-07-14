@@ -245,6 +245,51 @@ function animate() {
 
     const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
    
+
+
+      // --- TORK ETKİSİ: ODALARIN FİZİKSEL YÖRÜNGE DÖNÜŞÜ ---
+    const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
+    
+    nodes.forEach(n => {
+        if (nodeMeshes[n.id]) {
+            const mesh = nodeMeshes[n.id];
+            
+            // Siyah ve Beyaz kutup odaları dikey milde kendi eksenlerinde dönüyor
+            if (n.id === "beyaz" || n.id === "siyah") {
+                mesh.rotation.y = aksSpini * (n.id === "beyaz" ? frekansInvert_Beyaz : frekansInvert_Siyah);
+                mesh.scale.setScalar(0.8 + heartbeat * 0.15);
+            } 
+            // Dış çeperdeki odalar (124875 spektrumu) torkun gücüyle merkez etrafında dönmeye başlıyor
+            else if (n.id !== "kirmizi" && n.id !== "yesil") {
+                // Orijinal sabit koordinatlardan radyal yarıçapı hesapla
+                const rRadius = Math.sqrt(n.pos[0] * n.pos[0] + n.pos[2] * n.pos[2]);
+                const bAngle = Math.atan2(n.pos[2], n.pos[0]);
+                
+                // ODALARIN KONUMU FONKSİYONA BAĞLANDI: Aks spini odaları bir dişli gibi uzayda döndürür
+                // Sarı ve Mor odaların zıt spin yönleri açıyı ters yönlerde tetikler
+                const dinamikAci = bAngle + (elapsed * 1.5 * (n.id === "mor" || n.id === "mavi" ? -1 : 1));
+                
+                mesh.position.x = Math.cos(dinamikAci) * rRadius;
+                mesh.position.z = Math.sin(dinamikAci) * rRadius;
+
+// Odalar hareket ettikçe, girdap kollarının teğet geçiş açısına göre parlamaları hesaplanır
+                const roomAngle = Math.atan2(mesh.position.z, mesh.position.x);
+                const intensity = (0.4 + Math.cos(roomAngle - aksSpini) * 0.6) * (0.6 + heartbeat * 0.4);
+                
+                mesh.material.color.setRGB(
+                    ((n.originalColor >> 16) & 255) / 255 * intensity, 
+                    ((n.originalColor >> 8) & 255) / 255 * intensity, 
+                    (n.originalColor & 255) / 255 * intensity
+                );
+            }
+        }
+    });
+
+    flowerGroup.rotation.y = -elapsed * 0.15; 
+    if (camIndex === 2) controls.update();
+    renderer.render(scene, camera);
+} // 'function animate()' döngüsünün pürüzsüz nihai kapanışı!
+
 // --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU ---
 if (nodeMeshes["siyah"] && nodeMeshes["beyaz"] && nodeMeshes["kirmizi"] && nodeMeshes["yesil"]) {
     const posSiyah = nodeMeshes["siyah"].position;   // Canlı Güney kutup noktası
@@ -284,7 +329,7 @@ if (nodeMeshes["siyah"] && nodeMeshes["beyaz"] && nodeMeshes["kirmizi"] && nodeM
     
 // DOĞRU VE MÜHÜRLÜ DİZİLİM (BUNUNLA DEĞİŞTİRİN):
         } // 'for' döngüsünün kapanışı
-    } // 'if (nodeMeshes...)' bloğunun kapanışı
+     // 'if (nodeMeshes...)' bloğunun kapanışı
 
     // Kapanış fonksiyonları 'animate' fonksiyonunun güvenli sınırları içine alındı
     flowerGroup.rotation.y = -elapsed * 0.15;
