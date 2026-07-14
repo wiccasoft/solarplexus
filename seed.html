@@ -1,301 +1,39 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <title>12 Asama - Cevrim Algoritmasi</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
-        #info { position: absolute; top: 15px; left: 15px; color: #fff; background: rgba(0,0,0,0.85); padding: 12px; border-radius: 6px; border: 1px solid #333; pointer-events: none; z-index: 10; }
-        #controls { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
-        button { background: #111; color: #00ffcc; border: 1px solid #00ffcc; padding: 10px 18px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #00ffcc; color: #000; }
-    </style>
 
-    <!-- MODERN THREE.JS LATEST SÜRÜM HARİTASI (Siyah Ekranı Çözen Bölüm) -->
- <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@latest/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@latest/examples/jsm/"
-            }
-        }
-    </script>
-</head>
-<body>
+function setPoles(northName, southName) {
+function setPoles(northName, southName) {
+  if (currentAxis) scene.remove(currentAxis);
 
-    <div id="info">
-        <div style="color: #00ffcc; font-weight: bold; margin-bottom: 5px;">ORTAK FREKANS MATRİSİ</div>
-        <div>Süre: <span id="time">0.00</span> / 13.00 sn</div>
-        <div>Aşama: <span id="stage">1</span> / 12</div>
-        <div style="margin-top: 5px; font-size: 11px; color: #aaa;">Aktif Paket: <span id="packet-info">Beklemede</span></div>
-    </div>
+  const northSphere = scene.getObjectByName(northName);
+  const southSphere = scene.getObjectByName(southName);
+  if (!northSphere || !southSphere) return;
 
-    <div id="controls">
-        <button id="btn-174">174 Hz Paketi Fırlat (+ Yük)</button>
-        <button id="btn-285">285 Hz Paketi Fırlat (- Yük)</button>
-        <button id="btn-cam">Kamera Değiştir</button>
-    </div>
+  const northPos = northSphere.position;
+  const southPos = southSphere.position;
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  const direction = new THREE.Vector3().subVectors(northPos, southPos).normalize();
+  const centerPos = new THREE.Vector3().addVectors(northPos, southPos).multiplyScalar(0.5);
 
+  const length = 10;
+  const from = centerPos.clone().add(direction.clone().multiplyScalar(-length));
+  const to   = centerPos.clone().add(direction.clone().multiplyScalar(length));
 
-        // --- 1. ÖNCE SINIF ŞABLONUNU TANIMLIYORUZ (Doğru Konum) ---
-class KozmikVeriPaketi {
-    constructor(originRoom, targetRoom, frekansGrubu) {
-        this.origin = originRoom;
-        this.target = targetRoom;
-        this.frekansNumarasi = frekansGrubu; 
-        this.dalgaBoyuIsareti = frekansGrubu === 174 ? -1 : 1; 
-        this.yonVektoru = new THREE.Vector3(0, 1, 0); // Üç boyutlu çıkış vektörü
-        this.kiraliteSpini = frekansGrubu === 174 ? -1 : 1; // Sola/Sağa spin bilgisi
-    }
+  const axisGeom = new THREE.BufferGeometry().setFromPoints([from,to]);
+  const axisMat = new THREE.LineBasicMaterial({color:0x00ff00});
+  currentAxis = new THREE.Line(axisGeom, axisMat);
+  scene.add(currentAxis);
+
+  // 🔑 Kamerayı yeni eksene hizala
+  camera.position.copy(centerPos.clone().add(direction.clone().multiplyScalar(10)));
+  camera.lookAt(centerPos);
+  controls.target.copy(centerPos);
+  controls.update();
 }
 
-        // --- 1. SAHNE VE ARKA PLAN ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000); 
+  // Kutup kürelerini bul
+  const northSphere = scene.getObjectByName(northName);
+  const southSphere = scene.getObjectByName(southName);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        const clock = new THREE.Clock();
-        const TOTAL_CYCLE = 13.0; 
-
-        // --- 2. 3 FARKLI KAMERA REJİSİ ---
-        const cameraPositions = [
-            { x: 0, y: 25, z: 0 },  // 1. Tepe Bakışı (Yaşam Çiçeği)
-            { x: 0, y: 1, z: 8 },   // 2. Çekirdek Açısı (Kırmızı-Yeşil)
-            { x: 12, y: 10, z: 12 }  // 3. Dinamik Göz (Orbit)
-        ];
-        let camIndex = 0;
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.copy(cameraPositions[camIndex]);
-        camera.lookAt(0, 0, 0);
-        
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-
-        document.getElementById('btn-cam').addEventListener('click', () => {
-            camIndex = (camIndex + 1) % cameraPositions.length;
-            camera.position.copy(cameraPositions[camIndex]);
-            camera.lookAt(0, 0, 0);
-        });
-
-        // --- 3. KOORDİNATLARI TAM VE EKSİKSİZ ADRESLİ ODALAR ---
-        const nodes = [
-            { id: "beyaz",    pos: [0, 4, 0],   color: 0xffffff, originalColor: 0xffffff },
-            { id: "siyah",    pos: [0, -4, 0],  color: 0x222222, originalColor: 0x222222 },
-            { id: "kirmizi",  pos: [0, 2, 0],   color: 0xff0000, originalColor: 0xff0000 },
-            { id: "yesil",    pos: [0, 0, -2],  color: 0x00ff00, originalColor: 0x00ff00 },   
-            { id: "turuncu",  pos: [4, 1, 0],   color: 0xffa500, originalColor: 0xffa500 },
-            { id: "mavi",     pos: [-4, -1, -2],color: 0x0000ff, originalColor: 0x0000ff },
-            { id: "sari",     pos: [3, -1, 2],  color: 0xffff00, originalColor: 0xffff00 },
-            { id: "mor",      pos: [-3, 2, -2], color: 0x800080, originalColor: 0x800080 }
-        ];
-
-function veriPaketiniModüleEt(paket, currentStage, elapsed) {
-    // Kırmızı (1) en yüksek dalga boyu, Mor (5) en düşük dalga boyu kuralı
-    // Paket Kırmızı'dan çıktıktan sonra Beyaz oda en yüksek frekansı ters çevirir (Invert)
-    if (paket.origin === "kirmizi") {
-        paket.yonVektoru.set(0, 1, 0); // Yukarı Vektör (Beyaz'a doğru fışkırma)
-        paket.kiraliteSpini = -1;      // Beyaz odayı SOLA döndürme emri
-    } 
-    // Paket Mor'dan çıktıktan sonra Siyah oda en düşük frekansı ters çevirir
-    else if (paket.origin === "mor") {
-        paket.yonVektoru.set(0, -1, 0); // Aşağı Vektör (Siyah'a doğru fışkırma)
-        paket.kiraliteSpini = 1;        // Siyah odayı SAĞA döndürme emri
-    }
-
-    // --- 3(+) VE 6(-) KOMŞU ODA SPİN MODÜLASYONU ---
-    // Paket zincir halinde ilerlerken, 3 ve 6 aksları komşu odaların spin yönünü anlık değiştirir
-    if (currentStage === 3 || currentStage === 9) {
-        paket.dalgaBoyuIsareti *= -1; // Sinüs dalgası yönü (+/-) tam tersine kırılır
-        paket.kiraliteSpini = 1;      // Turuncuyu SAĞA döndürür
-    } else if (currentStage === 6 || currentStage === 12) {
-        paket.kiraliteSpini = -1;     // Moru SOLA döndürür (Sarı ile Mor zıt spin kuralı)
-    }
-}
-
-// --- 2. CANLI PAKETİ TETİKLEYEN BUTON DİNAMİKLERİ ---
-document.getElementById('btn-174').onclick = () => {
-    // Sınıftan canlı bir nesne üretiyoruz (Siyah ekranı çözen hamle)
-    aktifPaket = new KozmikVeriPaketi("kirmizi", "beyaz", 174);
-    aktifPaket.yonVektoru.set(0, 1, 0); // Yukarı yönlü vektör bilgisi verildi
-    document.getElementById('packet-info').innerText = "174 Hz (- Yük) Vektörü Aktif";
-    spiralLine.material.color.setHex(0x00ffcc);
-};
-
-document.getElementById('btn-285').onclick = () => {
-    aktifPaket = new KozmikVeriPaketi("mor", "siyah", 285);
-    aktifPaket.yonVektoru.set(0, -1, 0); // Aşağı yönlü vektör bilgisi verildi
-    document.getElementById('packet-info').innerText = "285 Hz (+ Yük) Vektörü Aktif";
-    spiralLine.material.color.setHex(0xff0055);
-};
-
-        // --- DOĞAL GLUON İSKELET HATLARI (PÜRÜZSÜZ ENERJİ OMURGASI) ---
-const skeletonSegments = 120; // Eğrinin pürüzsüz olması için segment sayısını artırdık
-const matW = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.5, linewidth: 2 });
-const matTW = new THREE.LineBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.5, linewidth: 2 });
-
-const geoW = new THREE.BufferGeometry();
-const ptsW = []; for(let i=0; i<=skeletonSegments; i++) ptsW.push(new THREE.Vector3());
-geoW.setFromPoints(ptsW);
-const lineW = new THREE.Line(geoW, matW); scene.add(lineW);
-
-const geoTW = new THREE.BufferGeometry();
-const ptsTW = []; for(let i=0; i<=skeletonSegments; i++) ptsTW.push(new THREE.Vector3());
-geoTW.setFromPoints(ptsTW);
-const lineTW = new THREE.Line(geoTW, matTW); scene.add(lineTW);
-
-
-
-
-        const nodeMeshes = {};
-// --- ODALARI OLUŞTURMA VE HAFIZAYA ALMA DÖNGÜSÜ ---
-nodes.forEach(n => {
-    const geo = new THREE.SphereGeometry(n.id === "yesil" ? 0.4 : 0.6, 16, 16);
-    const mat = new THREE.MeshBasicMaterial({ color: n.color });
-    const sphere = new THREE.Mesh(geo, mat);
-    sphere.position.set(n.pos[0], n.pos[1], n.pos[2]);
-    scene.add(sphere);
-    nodeMeshes[n.id] = sphere; // Mekanizmanın odaları bulmasını sağlayan kilit satır
-});
-
- 
-
-
-
-        // Tepede asilce dönecek olan Yaşam Çiçeği katmanı
-        const flowerGroup = new THREE.Group();
-        flowerGroup.position.y = 6;
-        scene.add(flowerGroup);
-
-        for(let i=0; i<6; i++) {
-            const angle = (i / 6) * Math.PI * 2;
-            const ringGeo = new THREE.RingGeometry(1, 1.1, 24);
-            const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.position.set(Math.cos(angle)*0.8, 0, Math.sin(angle)*0.8);
-            ring.rotation.x = Math.PI / 2;
-            flowerGroup.add(ring);
-        }
-
-        // --- 4. SİNYAL DATA PAKETİ VE DALGA BOYU SİSTEMİ ---
-        let aktifPaket = null;
-
-        const spiralGeometry = new THREE.BufferGeometry();
-        const linePoints = [];
-        for(let i=0; i<=60; i++) linePoints.push(new THREE.Vector3());
-        spiralGeometry.setFromPoints(linePoints);
-        const spiralMaterial = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0 });
-        const spiralLine = new THREE.Line(spiralGeometry, spiralMaterial);
-        scene.add(spiralLine);
-
-
-
-        //  12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
-function animate() {
-    requestAnimationFrame(animate);
-    const elapsed = clock.getElapsedTime(), cycleTime = elapsed % TOTAL_CYCLE, progress = cycleTime / TOTAL_CYCLE;
-    const currentStage = Math.floor(progress * 12) + 1;
-
-    document.getElementById("time").innerText = cycleTime.toFixed(2);
-    document.getElementById("stage").innerText = currentStage;
-
-    const arrayW = lineW.geometry.attributes.position.array, arrayTW = lineTW.geometry.attributes.position.array;
-    
-    // --- 3 VE 6 SPİN AKSINA BAĞLI EVRESEL FREKANS İNVERTÖRÜ ---
-    const aksSpini = elapsed * 3.5; // 3 ve 6 spin aksımız hızla dönüyor
-    
-    // Kırmızı-Yeşil denge aksı etrafındaki 3 boyutlu frekans bükülmesi kuralı
-    let frekansInvert_Beyaz = -Math.sin(elapsed * 6.0); // En yüksek frekansı ters çevirip içeride tutar
-    let frekansInvert_Siyah = Math.cos(elapsed * 6.0);  // En düşük frekansı ters çevirip tabanda mühürler
-
-    for (let i = 0; i <= skeletonSegments; i++) {
-        const ratio = i / skeletonSegments;
-        const currentY = THREE.MathUtils.lerp(-4, 4, ratio);
-        
-        // Kırmızı (1) en yüksek dalga boyu, Mor (5) en düşük dalga boyu alanı
-        // Genlik, enerjinin merkezden fışkırıp tekrar kaynağa dönmesini sağlayacak şekilde kapandı
-        const radW = (0.5 - Math.cos(ratio * Math.PI * 2) * 0.7) * 1.5;
-
-        // Akım ters yönde dönerek karşı odayı yakar ve bir sonraki odaya sıçrar
-        // 3 ve 6 aksının yarattığı doğal spin torku dalga boyunu yönlendiriyor
-        const angW = -ratio * Math.PI * 6 - aksSpini + frekansInvert_Beyaz;
-        const angTW = ratio * Math.PI * 6 + aksSpini + frekansInvert_Siyah;
-
-        arrayW[i * 3] = Math.cos(angW) * radW; arrayW[i * 3 + 1] = currentY; arrayW[i * 3 + 2] = Math.sin(angW) * radW;
-        arrayTW[i * 3] = Math.cos(angTW) * radW; arrayTW[i * 3 + 1] = currentY; arrayTW[i * 3 + 2] = Math.sin(angTW) * radW;
-    }
-    lineW.geometry.attributes.position.needsUpdate = lineTW.geometry.attributes.position.needsUpdate = true;
- // --- SARI VE MOR ODALARIN ZIT SPİN VE INDÜKSİYON ATLAMASI ---
-    if (aktifPaket) {
-        spiralLine.material.opacity = 0.9; const pos = spiralLine.geometry.attributes.position.array;
-        for (let i = 0; i <= 60; i++) {
-            const t = i / 60, radSp = (0.5 - Math.cos(t * Math.PI * 2) * 0.7) * 1.5;
-            // Paket bilgileri merkezden (kaynaktan) akıp tekrar geriye bükülüyor
-            const angle = -t * Math.PI * 6 - aksSpini + (progress * (aktifPaket.frekansNumarasi / 360 * Math.PI * 2) * 10 * frekansInvert_Beyaz);
-            pos[i * 3] = Math.cos(angle) * radSp; pos[i * 3 + 1] = THREE.MathUtils.lerp(-4, 4, t); pos[i * 3 + 2] = Math.sin(angle) * radSp;
-        }
-        spiralLine.geometry.attributes.position.needsUpdate = true;
-    }
-
-  
-      // --- TORK ETKİSİ: ODALARIN FİZİKSEL YÖRÜNGE DÖNÜŞÜ ---
-    const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
-    
-    nodes.forEach(n => {
-        if (nodeMeshes[n.id]) {
-            const mesh = nodeMeshes[n.id];
-            
-            // Siyah ve Beyaz kutup odaları dikey milde kendi eksenlerinde dönüyor
-            if (n.id === "beyaz" || n.id === "siyah") {
-                mesh.rotation.y = aksSpini * (n.id === "beyaz" ? frekansInvert_Beyaz : frekansInvert_Siyah);
-                mesh.scale.setScalar(0.8 + heartbeat * 0.15);
-            } 
-            // Dış çeperdeki odalar (124875 spektrumu) torkun gücüyle merkez etrafında dönmeye başlıyor
-            else if (n.id !== "kirmizi" && n.id !== "yesil") {
-                // Orijinal sabit koordinatlardan radyal yarıçapı hesapla
-                const rRadius = Math.sqrt(n.pos[0] * n.pos[0] + n.pos[2] * n.pos[2]);
-                const bAngle = Math.atan2(n.pos[2], n.pos[0]);
-                
-                // ODALARIN KONUMU FONKSİYONA BAĞLANDI: Aks spini odaları bir dişli gibi uzayda döndürür
-                // Sarı ve Mor odaların zıt spin yönleri açıyı ters yönlerde tetikler
-                const dinamikAci = bAngle + (elapsed * 1.5 * (n.id === "mor" || n.id === "mavi" ? -1 : 1));
-                
-                mesh.position.x = Math.cos(dinamikAci) * rRadius;
-                mesh.position.z = Math.sin(dinamikAci) * rRadius;
-
-// Odalar hareket ettikçe, girdap kollarının teğet geçiş açısına göre parlamaları hesaplanır
-                const roomAngle = Math.atan2(mesh.position.z, mesh.position.x);
-                const intensity = (0.4 + Math.cos(roomAngle - aksSpini) * 0.6) * (0.6 + heartbeat * 0.4);
-                
-                mesh.material.color.setRGB(
-                    ((n.originalColor >> 16) & 255) / 255 * intensity, 
-                    ((n.originalColor >> 8) & 255) / 255 * intensity, 
-                    (n.originalColor & 255) / 255 * intensity
-                );
-            }
-        }
-    });
-
-    flowerGroup.rotation.y = -elapsed * 0.15; 
-    if (camIndex === 2) controls.update();
-    renderer.render(scene, camera);
-
-// --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU (İŞLEVSEL ALANI) ---
-    // ... [Önceki kodun 272. satıra kadar olan kısmı]
-    
-    // Yörünge ve render güncellemeleri
-flowerGroup.rotation.y = -elapsed * 0.15;
-    if (camIndex === 2) controls.update();
-    renderer.render(scene, camera);
-} // 'animate' fonksiyonunun TEK ve GERÇEK nihai kapanışı!
-
-animate();
-</script>
-</body>
-</html>
+  if (!northSphere || !southSphere) {
+    console.warn("Küre bulunamadı:", northName, southName);
+    return;
+  }
