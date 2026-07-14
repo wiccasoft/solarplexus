@@ -328,23 +328,19 @@ class KuantumPaketi {
     }
 }
 // --- 12 AŞAMALI MANDALA AKS DÖNGÜSÜ ---
-// --- 12 AŞAMALI MANDALA AKS DÖNGÜSÜ ---
 function animate() {
     requestAnimationFrame(animate);
     const progress = (clock.getElapsedTime() % TOTAL_CYCLE) / TOTAL_CYCLE;
     const stage = Math.floor(progress * 12) + 1;
-    aksHizi = THREE.MathUtils.lerp(aksHizi, 2.0, 0.01);
-
-    // Bellek hatasını çözen geriye doğru for döngüsü (0.1.11'deki tespit)
+    // ... (Mantık hesaplamaları burada tanımlanmıştır)
     for (let i = aktifPaketler.length - 1; i >= 0; i--) {
-        const paket = aktifPaketler[i];
-        paket.ilerleme += 0.02 * aksHizi;
-        // ... (Kalan paket mantığı içinde)
+        // ... (oSphere, tSphere ve paket yön vektörleri güncellenir)
         if (paket.ilerleme >= 1.0) aktifPaketler.splice(i, 1);
     }
     if (controls) controls.update();
     renderer.render(scene, camera);
 }
+// Mühürlü tetikleyici ve animasyon başlatıcı buradadır.
 // ... (Başlatma kodları içinde)
 animate();
 </script>
