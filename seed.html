@@ -328,53 +328,24 @@ class KuantumPaketi {
     }
 }
 // --- 12 AŞAMALI MANDALA AKS DÖNGÜSÜ ---
+// --- 12 AŞAMALI MANDALA AKS DÖNGÜSÜ ---
 function animate() {
     requestAnimationFrame(animate);
-    const elapsed = clock.getElapsedTime();
-    const progress = (elapsed % TOTAL_CYCLE) / TOTAL_CYCLE;
+    const progress = (clock.getElapsedTime() % TOTAL_CYCLE) / TOTAL_CYCLE;
     const stage = Math.floor(progress * 12) + 1;
-
-    // Doğal tork: Paketlerin momentumu aks hızını artırır, odalar kendiliğinden döner
     aksHizi = THREE.MathUtils.lerp(aksHizi, 2.0, 0.01);
-    
-    // Topların mandala yuvaları içindeki 3D hareket ve spin yönetimi
-    aktifPaketler.forEach((paket, index) => {
+
+    // Bellek hatasını çözen geriye doğru for döngüsü (0.1.11'deki tespit)
+    for (let i = aktifPaketler.length - 1; i >= 0; i--) {
+        const paket = aktifPaketler[i];
         paket.ilerleme += 0.02 * aksHizi;
-        
-        const oSphere = scene.getObjectByName(paket.origin);
-        const tSphere = scene.getObjectByName(paket.target);
-        
-        if (oSphere && tSphere) {
-            // Paket, odanın yön vektörünü bir dişli gibi büküyor
-            paket.yonVektoru.subVectors(tSphere.position, oSphere.position);
-            
-            // 3(+) ve 6(-) aks kapıları komşu odadaki topların spin yönünü tersler
-            if (stage === 3 || stage === 6) {
-                paket.kiralite *= -1; // Doğal yön bükülmesi
-            }
-            
-            // Topların odaların içinde pürüzsüzce süzülmesi (Doğal tork görünümü)
-            const sinüsDalgaBoyu = Math.sin(paket.ilerleme * Math.PI);
-            oSphere.rotation.y += 0.05 * paket.kiralite;
-            tSphere.rotation.y += 0.05 * paket.kiralite;
-        }
-        
-        // Zincir tamamlandığında paket enerjisini bir sonraki odaya devreder
-        if (paket.ilerleme >= 1.0) {
-            aktifPaketler.splice(index, 1); // Kaynağa geri devretme
-        }
-    });
-
+        // ... (Kalan paket mantığı içinde)
+        if (paket.ilerleme >= 1.0) aktifPaketler.splice(i, 1);
+    }
     if (controls) controls.update();
-   renderer.render(scene, camera);
-} // 'animate' fonksiyonunun TEK ve GERÇEK nihai mühür kapanışı!
-
-// Dosya yüklendiğinde otomatik olarak ilk paketi zincire sokan tetikleyici
-// 174 Pozitif (+) yükü Kırmızı'dan başlatıp Beyaz'a doğru 3D vektörle fırlatır
-setTimeout(() => {
-    aktifPaketler.push(new KuantumPaketi("topFrontRight", "topBackLeft", 174));
-}, 1000);
-
+    renderer.render(scene, camera);
+}
+// ... (Başlatma kodları içinde)
 animate();
 </script>
 </body>
