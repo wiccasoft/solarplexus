@@ -237,7 +237,7 @@ function animate() {
         for (let i = 0; i <= 60; i++) {
             const t = i / 60, radSp = (0.5 - Math.cos(t * Math.PI * 2) * 0.7) * 1.5;
             // Paket bilgileri merkezden (kaynaktan) akıp tekrar geriye bükülüyor
-            const angle = -t * Math.PI * 6 - aksSpini + (progress * aktifPaket.aci * 10 * frekansInvert_Beyaz);
+            const angle = -t * Math.PI * 6 - aksSpini + (progress * (aktifPaket.frekansNumarasi / 360 * Math.PI * 2) * 10 * frekansInvert_Beyaz)
             pos[i * 3] = Math.cos(angle) * radSp; pos[i * 3 + 1] = THREE.MathUtils.lerp(-4, 4, t); pos[i * 3 + 2] = Math.sin(angle) * radSp;
         }
         spiralLine.geometry.attributes.position.needsUpdate = true;
