@@ -292,21 +292,25 @@ function animate() {
 
 // --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU (İŞLEVSEL ALANA ALINDI) ---
     if (nodeMeshes["siyah"] && nodeMeshes["beyaz"]) {
-        const posS = nodeMeshes["siyah"].position, posB = nodeMeshes["beyaz"].position; 
+        const posS = nodeMeshes["siyah"].position, posB = nodeMeshes["beyaz"].position;
         for (let i = 0; i <= skeletonSegments; i++) {
             const r = i / skeletonSegments, crY = THREE.MathUtils.lerp(posS.y, posB.y, r);
             let dY = 1.5;
             if(nodeMeshes["sari"]) dY = Math.sqrt(nodeMeshes["sari"].position.x**2 + nodeMeshes["sari"].position.z**2);
             const radW = (0.5 - Math.cos(r * Math.PI * 2) * 0.7) * dY;
-            arrayW[i*3] = Math.cos(angW)*radW + THREE.MathUtils.lerp(posS.x, posB.x, r);
+            // Lokal değişken hatasını çözen mutlak açı hesaplaması:
+            const l_angW = - r * Math.PI * 6 - aksSpini + frekansInvert_Beyaz;
+            
+            arrayW[i*3] = Math.cos(l_angW)*radW + THREE.MathUtils.lerp(posS.x, posB.x, r);
             arrayW[i*3+1] = crY;
-            arrayW[i*3+2] = Math.sin(angW)*radW + THREE.MathUtils.lerp(posS.z, posB.z, r);
+            arrayW[i*3+2] = Math.sin(l_angW)*radW + THREE.MathUtils.lerp(posS.z, posB.z, r);
         }
     }
+
     flowerGroup.rotation.y = -elapsed * 0.15;
     if (camIndex === 2) controls.update();
     renderer.render(scene, camera);
-} // animate() kapanışı
+} // animate() döngüsünün pürüzsüz nihai mühür kapanışı
 
 animate();
 </script>
