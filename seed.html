@@ -154,6 +154,16 @@ const lineTW = new THREE.Line(geoTW, matTW); scene.add(lineTW);
 
 
         const nodeMeshes = {};
+// --- ODALARI OLUŞTURMA VE HAFIZAYA ALMA DÖNGÜSÜ ---
+nodes.forEach(n => {
+    const geo = new THREE.SphereGeometry(n.id === "yesil" ? 0.4 : 0.6, 16, 16);
+    const mat = new THREE.MeshBasicMaterial({ color: n.color });
+    const sphere = new THREE.Mesh(geo, mat);
+    sphere.position.set(n.pos[0], n.pos[1], n.pos[2]);
+    scene.add(sphere);
+    nodeMeshes[n.id] = sphere; // Mekanizmanın odaları bulmasını sağlayan kilit satır
+});
+
        // --- SPİNİN YARATTIĞI DOĞAL EYLEM (ODALARIN KENDİLİĞİNDEN PARLAMASI) ---
 nodes.forEach(n => {
     if (nodeMeshes[n.id]) {
@@ -234,26 +244,6 @@ nodes.forEach(n => {
             spiralLine.material.color.setHex(0xff0055);
         });
 
-
-
-        class KozmikVeriPaketi {
-    constructor(originRoom, targetRoom, frekansGrubu) {
-        this.origin = originRoom;       // Bilginin çıktığı kaynak oda adresi
-        this.target = targetRoom;       // Bilginin ulaştığı alıcı oda adresi
-        
-        // --- SPEKTRUM VE ENERJİ SEVİYESİ VERİSİ ---
-        this.frekansNumarasi = frekansGrubu; // 174 (Negatif) veya 285 (Pozitif)
-        this.dalgaBoyuIsareti = frekansGrubu === 174 ? -1 : 1; // (- / +) kutupsallık yükü
-
-        // --- 3 BOYUTLU VEKTÖR VE YÖNELİM BİLGİSİ ---
-        // Çıkış vektörü: Akımın dikeyde (Aşağı/Yukarı) ve yatayda (Sağ/Sol) hangi aksa fışkırdığı
-        this.yonVektoru = new THREE.Vector3(0, 0, 0); 
-        
-        // --- 3 VE 6 SPİN AKS ENERJİ REJİSİ ---
-        this.kiraliteSpini = 0;         // Ulaştığı odanın dişlisini döndüreceği yön bilgisi
-        this.isLocked = true;           // Beyaz/Siyah invertörler tarafından odada tutulma kilidi
-    }
-}
 
 
 
