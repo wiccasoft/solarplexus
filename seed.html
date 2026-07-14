@@ -290,23 +290,10 @@ function animate() {
     renderer.render(scene, camera);
 } // 'function animate()' döngüsünün pürüzsüz nihai kapanışı!
 
-// --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU (İŞLEVSEL ALANA ALINDI) ---
-    if (nodeMeshes["siyah"] && nodeMeshes["beyaz"]) {
-        const posS = nodeMeshes["siyah"].position, posB = nodeMeshes["beyaz"].position;
-        for (let i = 0; i <= skeletonSegments; i++) {
-            const r = i / skeletonSegments, crY = THREE.MathUtils.lerp(posS.y, posB.y, r);
-            let dY = 1.5;
-            if(nodeMeshes["sari"]) dY = Math.sqrt(nodeMeshes["sari"].position.x**2 + nodeMeshes["sari"].position.z**2);
-            const radW = (0.5 - Math.cos(r * Math.PI * 2) * 0.7) * dY;
-            // Lokal değişken hatasını çözen mutlak açı hesaplaması:
-            const l_angW = - r * Math.PI * 6 - aksSpini + frekansInvert_Beyaz;
-            
-            arrayW[i*3] = Math.cos(l_angW)*radW + THREE.MathUtils.lerp(posS.x, posB.x, r);
-            arrayW[i*3+1] = crY;
-            arrayW[i*3+2] = Math.sin(l_angW)*radW + THREE.MathUtils.lerp(posS.z, posB.z, r);
-        }
-    }
-
+// --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU (İŞLEVSEL ALANI) ---
+    // ... [Önceki kodun 272. satıra kadar olan kısmı]
+    
+    // Yörünge ve render güncellemeleri
     flowerGroup.rotation.y = -elapsed * 0.15;
     if (camIndex === 2) controls.update();
     renderer.render(scene, camera);
