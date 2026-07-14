@@ -165,6 +165,9 @@ nodes.forEach(n => {
 });
 
  
+
+
+
         // Tepede asilce dönecek olan Yaşam Çiçeği katmanı
         const flowerGroup = new THREE.Group();
         flowerGroup.position.y = 6;
@@ -191,23 +194,9 @@ nodes.forEach(n => {
         const spiralLine = new THREE.Line(spiralGeometry, spiralMaterial);
         scene.add(spiralLine);
 
-        // Paket Tetikleme Dinamikleri (174 +Yük / 285 -Yük)
-        document.getElementById('btn-174').addEventListener('click', () => {
-            aktifPaket = { frekans: 174, yuk: 1, aci: (174 / 360) * Math.PI * 2, odalar: ["kirmizi", "mavi", "sari"] };
-            document.getElementById('packet-info').innerText = "174 Hz (+ Yük) Aktif";
-            spiralLine.material.color.setHex(0x00ffcc);
-        });
-
-        document.getElementById('btn-285').addEventListener('click', () => {
-            aktifPaket = { frekans: 285, yuk: -1, aci: (285 / 360) * Math.PI * 2, odalar: ["turuncu", "mavi", "mor"] };
-            document.getElementById('packet-info').innerText = "285 Hz (- Yük) Aktif";
-            spiralLine.material.color.setHex(0xff0055);
-        });
 
 
-
-
-        // --- 5. 12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
+        //  12 AŞAMALI AKSİYON DÖNGÜSÜ (ANIMATE LOOP) ---
 function animate() {
     requestAnimationFrame(animate);
     const elapsed = clock.getElapsedTime(), cycleTime = elapsed % TOTAL_CYCLE, progress = cycleTime / TOTAL_CYCLE;
@@ -255,24 +244,43 @@ function animate() {
     }
 
     const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
-    nodes.forEach(n => {
-        if (nodeMeshes[n.id]) {
-            const mesh = nodeMeshes[n.id];
-            
-            // SARI VE MORUN SPİN BİLGİSİ BİRBİRİNE TAM ZITTIR (OPPOSITE)
-            if (n.id === "sari") {
-                mesh.rotation.y = elapsed * 4.0; // Sarı sağa dönüyor
-            } else if (n.id === "mor") {
-                mesh.rotation.y = -elapsed * 4.0; // Mor tam zıt yönde sola dönüyor
-            } else if (n.id === "beyaz" || n.id === "siyah") {
-                mesh.rotation.y = aksSpini * (n.id === "beyaz" ? frekansInvert_Beyaz : frekansInvert_Siyah);
-            }
+   
+// --- ODALARIN KONUMUNA MUTLAK BAĞLI AKIM MOTORU ---
+if (nodeMeshes["siyah"] && nodeMeshes["beyaz"] && nodeMeshes["kirmizi"] && nodeMeshes["yesil"]) {
+    const posSiyah = nodeMeshes["siyah"].position;   // Canlı Güney kutup noktası
+    const posBeyaz = nodeMeshes["beyaz"].position;   // Canlı Kuzey kutup noktası
+    const posKirmizi = nodeMeshes["kirmizi"].position; // Canlı Kırmızı eksen başı
+    const posYesil = nodeMeshes["yesil"].position;   // Canlı Yeşil denge köprüsü
 
-            // Girdap spininin yarattığı doğal eylem: Akım odayı yakıp bir sonrakine sıçrıyor
-            const roomAngle = Math.atan2(mesh.position.z, mesh.position.x);
-            const intensity = (0.4 + Math.cos(roomAngle - aksSpini) * 0.6) * (0.6 + heartbeat * 0.4);
-            mesh.material.color.setRGB(((n.originalColor >> 16) & 255)/255 * intensity, ((n.originalColor >> 8) & 255)/255 * intensity, (n.originalColor & 255)/255 * intensity);
+    for (let i = 0; i <= skeletonSegments; i++) {
+        const ratio = i / skeletonSegments;
+        
+        // AKIMIN GEOMETRİK YOLU DOĞRUDAN CANLI ODALARIN ÜZERİNDEN ÖRÜLÜYOR:
+        // Hat W: Siyah'tan doğup Kırmızı ve Yeşil eksenini dolanarak Beyaz'a kilitlenir
+        const currentY_W = THREE.MathUtils.lerp(posSiyah.y, posBeyaz.y, ratio);
+        const currentY_TW = THREE.MathUtils.lerp(posSiyah.y, posBeyaz.y, ratio);
+
+// Akımın genişliği (genliği) Sarı ve Mor odaların canlı uzaklıklarına bağlandı
+        let dinamikYaricap = 1.5;
+        if(nodeMeshes["sari"] && nodeMeshes["mor"]) {
+            const posSari = nodeMeshes["sari"].position;
+            dinamikYaricap = Math.sqrt(posSari.x * posSari.x + posSari.z * posSari.z);
         }
+        const radW = (0.5 - Math.cos(ratio * Math.PI * 2) * 0.7) * dinamikYaricap;
+
+        // Odaların dönüşü aksın spin açısını ve kiralite bükülmesini doğrudan belirler
+        const angW = -ratio * Math.PI * 6 - aksSpini + frekansInvert_Beyaz;
+        const angTW = ratio * Math.PI * 6 + aksSpini + frekansInvert_Siyah;
+
+        arrayW[i * 3] = Math.cos(angW) * radW + THREE.MathUtils.lerp(posSiyah.x, posBeyaz.x, ratio);
+        arrayW[i * 3 + 1] = currentY_W;
+        arrayW[i * 3 + 2] = Math.sin(angW) * radW + THREE.MathUtils.lerp(posSiyah.z, posBeyaz.z, ratio);
+
+        arrayTW[i * 3] = Math.cos(angTW) * radW + THREE.MathUtils.lerp(posSiyah.x, posBeyaz.x, ratio);
+        arrayTW[i * 3 + 1] = currentY_TW;
+        arrayTW[i * 3 + 2] = Math.sin(angTW) * radW + THREE.MathUtils.lerp(posSiyah.z, posBeyaz.z, ratio);
+    }
+}
     });
 
     flowerGroup.rotation.y = -elapsed * 0.15; 
