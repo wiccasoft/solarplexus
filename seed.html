@@ -243,10 +243,7 @@ function animate() {
         spiralLine.geometry.attributes.position.needsUpdate = true;
     }
 
-    const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
-   
-
-
+  
       // --- TORK ETKİSİ: ODALARIN FİZİKSEL YÖRÜNGE DÖNÜŞÜ ---
     const heartbeat = Math.abs(Math.sin(progress * Math.PI * 12));
     
@@ -294,10 +291,10 @@ function animate() {
     // ... [Önceki kodun 272. satıra kadar olan kısmı]
     
     // Yörünge ve render güncellemeleri
-    flowerGroup.rotation.y = -elapsed * 0.15;
+flowerGroup.rotation.y = -elapsed * 0.15;
     if (camIndex === 2) controls.update();
     renderer.render(scene, camera);
-} // animate() döngüsünün pürüzsüz nihai mühür kapanışı
+} // 'animate' fonksiyonunun TEK ve GERÇEK nihai kapanışı!
 
 animate();
 </script>
