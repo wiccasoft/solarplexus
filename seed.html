@@ -19,14 +19,13 @@
 
 
 // ============================================================================
-// ADIM 1: ANA KUANTUM KAFES GRUBUNUN AÇILMASI
+// BÖLÜM 1: SENEKRONE GEOMETRİ SİSTEMİ VE KURULUM MATRİSİ
 // ============================================================================
-const KuantumKafesi = new THREE.Group(); // Tüm parçaları birbirine kilitleyecek mil
+const scene = new THREE.Scene(); // Önce sahne oluşturulur
+const KuantumKafesi = new THREE.Group(); // Sonra grup açılır ve sahneye eklenir
 scene.add(KuantumKafesi);
 
-  const scene = new THREE.Scene();
-
-  let currentAxis; // sahnedeki aktif eksen
+let currentAxis; // Sahnedeki aktif elektromanyetik eksen mili
 
 
 function setPoles(northName, southName) {
