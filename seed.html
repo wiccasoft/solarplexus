@@ -374,6 +374,8 @@ function animate() {
     // Uzaydaki sürtünme etkisi (Sonsuz hızlanmayı engeller, kararlı baseline hızına çeker)
     globalDönüşHızı = Math.max(0.005, globalDönüşHızı * 0.98); 
 
+    KuantumKafesi.rotateOnAxis(anaAksVektoru, globalDönüşHızı * delta * 25);
+
     if (controls) controls.update();
     renderer.render(scene, camera);
 }
