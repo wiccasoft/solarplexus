@@ -381,39 +381,15 @@ let globalDönüşHızı = 0.005; // Kararlı baseline dönüş momentumu
 const clock = new THREE.Clock();
 
 function animate() {
-    requestAnimationFrame(animate);
-    const delta = clock.getDelta();
-
-    // KuantumKafesi içindeki canlı Siyah ve Beyaz odaları yakala
-    const beyazKutupObj = KuantumKafesi.getObjectByName("BEYAZ_KUTUP_ODASI");
-    const siyahKutupObj = KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");
-    const merkezCekirdek = centerSphere;
-
-    if (beyazKutupObj && siyahKutupObj) {
-        // --- 1. DİNAMİK ÇİFT GLUON FIRLATICI ---
-        if (aktifPaketler.length === 0) {
-            // Kodun bu bölümü canlı kaynak ve hedef odalar arasında paketler oluşturur
-            // ... (paket oluşturma mantığı)
-        }
-
-        // --- 2. TERS KARE KANUNU ($1/r^2$) PARÇACIK HAREKET DÖNGÜSÜ ---
-        for (let i = aktifPaketler.length - 1; i >= 0; i--) {
-            // Kodun bu bölümü parçacıkların hedefe hareketini ve etkileşimini yönetir
-            // ... (hareket ve çarpışma mantığı)
-        }
-
-        // --- 3. DİNAMİK SPIN REAKSİYONU ---
-        // ... (KuantumKafesi rotasyon mantığı)
-
-        // --- 4. FRAKTAL DEŞARJ DÖNGÜSÜ ---
-        // ... (Emissive ve opacity değerlerinin azaltılması)
-    }
-
-    if (typeof controls !== 'undefined') controls.update();
-    renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+  const d = clock.getDelta(), nO = KuantumKafesi.getObjectByName("BEYAZ_KUTUP_ODASI"), sO = KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");
+  if (nO && sO) {
+    // ... [Animation logic for particle movement and rotation] ...
+    if (hit && !aktifPaketler.length) { KuantumKafesi.rotateOnAxis(ax, 0.12); aktifIndexA = (aktifIndexA+1)%6; aktifIndexB = (aktifIndexB+1)%6; }
+    // ... [Fade out effect logic] ...
+  }
+  if (typeof controls !== 'undefined') controls.update(); renderer.render(scene, camera);
 }
-
-// Büyük Motoru Ateşle
 animate();
 </script>
 </body>
