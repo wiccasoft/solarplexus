@@ -415,8 +415,16 @@ function animate() {
         spheres.forEach(s => {
             if (!s.isPole) {
                 let odaMesh = KuantumKafesi.getObjectByName(s.name);
-                if (odaMesh && odaMesh.material.emissiveIntensity > 0.5) {
-                    odaMesh.material.emissiveIntensity -= delta * 3.0;
+                if (odaMesh) {
+                    // Paket odadan çıktıktan sonra oda yavaşça sönerek başlangıç loşluğuna döner
+                    if (odaMesh.material.emissiveIntensity > 0.5) {
+                        odaMesh.material.emissiveIntensity -= delta * 4.0;
+                    }
+                    // 🔑 ALFA/OPACITY AZALTMA: Oda meshinin saydamlığını (alphasını) da kademeli olarak düşür
+                    // Başlangıç cam kılavuz değeri olan 0.15 seviyesine kadar yumuşakça deşarj eder
+                    if (odaMesh.material.opacity > 0.15) {
+                        odaMesh.material.opacity -= delta * 2.5;
+                    }
                 }
             }
         });
