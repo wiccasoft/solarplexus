@@ -393,54 +393,39 @@ function animate() {
         // Bilardo Topu Etkisi: Siyah (+1 Sağ Tork), Beyaz (-1 Sol Tork) kiral aksı
         const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
 
-        // --- 1. DİNAMİK 6 GLUON TETİKLEME (Siyah Vakum Başlangıçlı) ---
-        if (aktifPaketler.length === 0) {
-            // [Katmanlar için 6 adet canlı KuantumPaketi nesnesi tetiklenir]
-            // Paketlerin başlangıç ivmeleri Siyah'ın emiş torkuna kilitlidir.
-        }
+        // ============================================================================
+// BÖLÜM 4 & 5 KÖPRÜSÜ: DİNAMİK ÇİFT GLUON FIRLATICI (Satır 374 - 380)
+// ============================================================================
+if (aktifPaketler.length === 0) {
+    // A Tarafı: Saat Yönünün Tersi Akış (1 -> 2 -> 4 -> 8 -> 7 -> 5)
+    let idA = rodinDizisiA[aktifIndexA];
+    let sonrakiIdA = rodinDizisiA[(aktifIndexA + 1) % rodinDizisiA.length];
+    let kaynakDataA = spheres.find(o => o.id === idA);
+    let hedefDataA = spheres.find(o => o.id === sonrakiIdA);
 
-        // --- 2. TERS KARE KANUNU ($1/r^2$) İLE PARÇACIK VE MOMENTUM TAKİBİ ---
-        let vuruşOldu = false;
-        let dinamikTorkEtkisi = 0;
+    // B Tarafı: Saat Yönü Ters Pompa Akış (8 -> 7 -> 5 -> 1 -> 2 -> 4)
+    let idB = rodinDizisiB[aktifIndexB];
+    let sonrakiIdB = rodinDizisiB[(aktifIndexB + 1) % rodinDizisiB.length];
+    let kaynakDataB = spheres.find(o => o.id === idB);
+    let hedefDataB = spheres.find(o => o.id === sonrakiIdB);
 
-        for (let i = aktifPaketler.length - 1; i >= 0; i--) {
-            let paket = aktifPaketler[i];
-            
-            // Canlı hedef odanın anlık konumunu çek
-            let hedefData = spheres.find(o => o.id === paket.hedefId);
-            let hedefMesh = KuantumKafesi.getObjectByName(hedefData.name);
+    let canlıKaynakA = KuantumKafesi.getObjectByName(kaynakDataA.name);
+    let canlıHedefA  = KuantumKafesi.getObjectByName(hedefDataA.name);
+    let canlıKaynakB = KuantumKafesi.getObjectByName(kaynakDataB.name);
+    let canlıHedefB  = KuantumKafesi.getObjectByName(hedefDataB.name);
 
-            if (hedefMesh && paket.mesh) {
-                // Parçacık ile hedef oda arasındaki anlık mesafeyi (r) hesapla
-                let r = paket.mesh.position.distanceTo(hedefMesh.position);
-                r = Math.max(0.1, r); // Sıfıra bölünme hatasını engelle (Tekillik Koruması)
+    if (canlıKaynakA && canlıHedefA && canlıKaynakB && canlıHedefB) {
+        // Gluon A fırlatılıyor
+        let paketA = new KuantumPaketi(canlıKaynakA, canlıHedefA, hedefDataA.color);
+        paketA.hedefId = sonrakiIdA;
+        aktifPaketler.push(paketA);
 
-                // 🔑 TERS KARE KANUNU ($1/r^2$): Parçacık odaya yaklaştıkça akış hızı katlanarak artar!
-                let dinamikIvme = (1.0 / (r * r)) * 0.5;
-                paket.ilerleme += delta * Math.min(4.0, 1.5 + dinamikIvme);
-
-                paket.guncelle(delta);
-
-                // Merkez Tekillik Girişimi: Gluonlar merkeze ($r \to 0$) yaklaştıkça merkez ışığı beslenir
-                if (paket.ilerleme >= 0.48 && paket.ilerleme <= 0.52 && merkezCekirdek) {
-                    merkezCekirdek.material.emissiveIntensity = Math.min(6.0, merkezCekirdek.material.emissiveIntensity + 0.15);
-                }
-
-                // Parçacık hedefe tam ulaştığında (Domino Etkisi Vuruşu)
-                if (paket.ilerleme >= 1.0) {
-                    hedefMesh.material.emissiveIntensity = 4.0;
-                    hedefMesh.material.opacity = 1.0;
-
-                    // 🔑 KİNETİK SPİN TRANSFERİ: Vuruş anında aktarılan tork, Ters Kare Kanunundan beslenir!
-                    // Siyah'ın uzak eksenindeki Yeşil ile Beyaz'ın uzak eksenindeki Kırmızı gerilimi sisteme spin yönü verir
-                    let polariteYonu = (hedefData.id % 2 === 0) ? 1 : -1; // + - + - Doğal Kiralite
-                    dinamikTorkEtkisi += 0.04 * polariteYonu * (1.0 / r); 
-
-                    KuantumKafesi.remove(paket.mesh);
-                    aktifPaketler.splice(i, 1);
-                    vuruşOldu = true;
-                }
-            }
+        // Gluon B fırlatılıyor (Zıt Kan Pompası)
+        let paketB = new KuantumPaketi(canlıKaynakB, canlıHedefB, hedefDataB.color);
+        paketB.hedefId = sonrakiIdB;
+        aktifPaketler.push(paketB);
+    }
+}
         }
 
         // --- 3. DİNAMİK SPIN REAKSİYONU ---
@@ -448,13 +433,9 @@ function animate() {
             // Küp artık sabit bir açıyla değil, Ters Kare vuruşunun ürettiği dinamik torkla "tık" diye bükülür!
             KuantumKafesi.rotateOnAxis(anaAksVektoru, dinamikTorkEtkisi);
 
-            // 6 yörüngenin indeks matrisini kaydır
-            indexA_Ters = (indexA_Ters + 1) % rodinA_Tersi.length;
-            indexA_Yon  = (indexA_Yon + 1) % rodinA_Yonu.length;
-            indexB_Ters = (indexB_Ters + 1) % rodinB_Tersi.length;
-            indexB_Yon  = (indexB_Yon + 1) % rodinB_Yonu.length;
-            indexC_Ters = (indexC_Ters + 1) % rodinC_Tersi.length;
-            indexC_Yon  = (indexC_Yon + 1) % rodinC_Yonu.length;
+ // Eski tanımlı olmayan indeksler yerine senin aktif indekslerini kaydırıyoruz
+aktifIndexA = (aktifIndexA + 1) % rodinDizisiA.length;
+aktifIndexB = (aktifIndexB + 1) % rodinDizisiB.length;
         }
 
         // --- 4. FRAKTAL DEŞARJ DÖNGÜSÜ ---
