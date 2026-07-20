@@ -407,8 +407,8 @@ function animate() {
                     
                     // 2. 🔑 KİLİT NOKTA: Sürekli dönme kapalı! 
                     // Sadece ve sadece paket odaya girince kafesi tek bir adım (aşama) döndürür
-                    const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
-                    KuantumKafesi.rotateOnAxis(anaAksVektoru, 0.15); // Sabit bir açıyla bir tık bükülme
+                    //const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
+                    //KuantumKafesi.rotateOnAxis(anaAksVektoru, 0.15); // Sabit bir açıyla bir tık bükülme
                 }
                 
                 KuantumKafesi.remove(paket.mesh);
