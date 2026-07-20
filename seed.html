@@ -317,11 +317,34 @@ function setTopView(camera, controls) {
   controls.update();
 }
 
-  function animate() {
+// ============================================================================
+// BÖLÜM 2: JROSKOPİK DÖNÜŞ MOTORU VE ANİMASYON DÖNGÜSÜ (Satır 312 - SONU)
+// ============================================================================
+let globalDönüşHızı = 0.005; // Kararlı baseline dönüş momentumu
+
+function animate() {
     requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+
+    // Dönen KuantumKafesi içinden canlı Siyah-Beyaz kutup odalarını yakala
+    const beyazKutupObj = KuantumKafesi.getObjectByName("BEYAZ_KUTUP_ODASI");
+    const siyahKutupObj = KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");
+
+    if (beyazKutupObj && siyahKutupObj) {
+        // İki oda arasında dinamik bir elektromanyetik mil (vektör) oluştur
+        const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
+        
+        // 🔑 KİLİT: Tüm odaları, sarı kareleri ve tetrahedronları bu aks üzerinde tek kütle olarak döndür!
+        KuantumKafesi.rotateOnAxis(anaAksVektoru, globalDönüşHızı * delta * 25);
+    }
+
+    if (typeof controls !== 'undefined') controls.update();
     renderer.render(scene, camera);
-  }
-  animate();
+}
+
+// Zamanlayıcıyı başlat ve motoru ateşle
+const clock = new THREE.Clock();
+animate();
 </script>
 </body>
 </html>
