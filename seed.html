@@ -303,10 +303,11 @@ class KuantumPaketi {
         const pMat = new THREE.MeshBasicMaterial({ color: renk });
         this.mesh = new THREE.Mesh(pGeom, pMat);
         this.mesh.position.copy(this.origin);
-        scene.add(this.mesh);
+        
+        // 🔑 KİLİT NOKTA: Paket sahneye değil, dönen kafese eklenmeli!
+        KuantumKafesi.add(this.mesh); 
     }
 }
-
 
 // --- ELEKTROMANYETİK TORK VE EKSENEL DÖNÜŞ MOTORU (ANIMATE) ---
 //let globalDönüşHızı = 0.005; 
