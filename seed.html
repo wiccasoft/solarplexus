@@ -293,6 +293,17 @@ offsets.forEach(pos => {
 });
 
 
+const odalar = [
+    { id: "BEYAZ", name: "BEYAZ_KUTUP_ODASI", pos: new THREE.Vector3(-0.25, 0.25, -0.25), color: 0xffffff, isPole: true },
+    { id: "SIYAH", name: "SIYAH_KUTUP_ODASI", pos: new THREE.Vector3(0.25, -0.25, 0.25), color: 0x111111, isPole: true },
+    
+    { id: "KIRMIZI", name: "KIRMIZI_ENERJI_ODASI", pos: new THREE.Vector3(0.25, 0.25, 0.25), color: 0xff0000, isPole: false },
+    { id: "TURUNCU", name: "TURUNCU_EMICI_ODA", pos: new THREE.Vector3(0.25, 0.25, -0.25), color: 0xff6600, isPole: false },
+    { id: "SARI", name: "SARI_ITICI_ODA", pos: new THREE.Vector3(0.25, -0.25, -0.25), color: 0xffff00, isPole: false },
+    { id: "YESIL", name: "YESIL_ENERJI_ODASI", pos: new THREE.Vector3(-0.25, -0.25, -0.25), color: 0x00ff00, isPole: false },
+    { id: "MAVI", name: "MAVI_KALKAN_ODASI", pos: new THREE.Vector3(-0.25, -0.25, 0.25), color: 0x0000ff, isPole: false },
+    { id: "MOR", name: "MOR_KABUK_ODASI", pos: new THREE.Vector3(-0.25, 0.25, 0.25), color: 0x660099, isPole: false }
+];
 spheres.forEach(s => {
     // ... geometriler ...
     // Siyah/Beyaz hariç diğerleri başlangıçta sönük (0.0) ve şeffaf (0.15)
