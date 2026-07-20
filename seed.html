@@ -353,10 +353,22 @@ class KuantumPaketi {
     }
 }
 
+
+
+// ============================================================================
+// BÖLÜM 4: DOUBLE VORTEX VE KUTSAL KAN POMPALAMA MOTORU
+// ============================================================================
 // Global veri paket takibi dizisi ve Rodin dizilimi
 let aktifPaketler = [];
-const rodinDizisi =[1,2,4,8,7,5];
-let aktifDiziIndex = 0;
+//const rodinDizisi =[1,2,4,8,7,5];
+// 🌪️ ÇİFT GİRDAP DİZİLİMLERİ (Örnek Rodin dizilimi)
+const rodinDizisiA = [1, 2, 4, 8, 7, 5]; // Saat Yönü Tersi
+const rodinDizisiB = [8, 7, 5, 1, 2, 4]; // Saat Yönü (Ters Pompa)
+
+//let aktifDiziIndex = 0;
+let aktifIndexA = 0;
+let aktifIndexB = 0;
+const clock = new THREE.Clock();
 
 // ============================================================================
 // BÖLÜM 2: JROSKOPİK DÖNÜŞ MOTORU VE ANİMASYON DÖNGÜSÜ (Satır 312 - SONU)
@@ -377,63 +389,81 @@ function animate() {
     const siyahKutupObj = KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");
 
     if (beyazKutupObj && siyahKutupObj) {
-   // --- 1. SÜREKLİ 124875 GLUON PAKETİ FIRLATMA ---
+        
+        // --- 1. ÇİFT GLUON TETİKLEME (Saat Yönü ve Ters Yön Aynı Anda) ---
         if (aktifPaketler.length === 0) {
-            let mevcutId = rodinDizisi[aktifDiziIndex];
-            let sonrakiId = rodinDizisi[(aktifDiziIndex + 1) % rodinDizisi.length];
-            
-            let kaynakData = spheres.find(o => o.id === mevcutId);
-            let hedonData = spheres.find(o => o.id === sonrakiId);
-            
-            let canlıKaynakMesh = KuantumKafesi.getObjectByName(kaynakData.name);
-            let canlıHedefMesh = KuantumKafesi.getObjectByName(hedonData.name);
-            
-            if (canlıKaynakMesh && canlıHedefMesh) {
-                // 🔑 KİLİT DÜZELTME: Paket rengini kaynakData yerine doğrudan HEDEF odanın kendi öz rengine (hedonData.color) kilitledik!
-                let yeniPaket = new KuantumPaketi(canlıKaynakMesh, canlıHedefMesh, hedonData.color);
-                yeniPaket.hedefId = sonrakiId;
-                aktifPaketler.push(yeniPaket);
+            // A Tarafı: Saat Yönünün Tersi Akış (1->2->4->8->7->5)
+            let mevcutIdA = rodinDizisiA[aktifIndexA];
+            let sonrakiIdA = rodinDizisiA[(aktifIndexA + 1) % rodinDizisiA.length];
+            let kaynakDataA = spheres.find(o => o.id === mevcutIdA);
+            let hedefDataA = spheres.find(o => o.id === sonrakiIdA);
+            let canlıKaynakMeshA = KuantumKafesi.getObjectByName(kaynakDataA.name);
+            let canlıHedefMeshA = KuantumKafesi.getObjectByName(hedefDataA.name);
+
+            // B Tarafı: Saat Yönü Ters Pompa Akış (5->7->8->4->2->1)
+            let mevcutIdB = rodinDizisiB[aktifIndexB];
+            let sonrakiIdB = rodinDizisiB[(aktifIndexB + 1) % rodinDizisiB.length];
+            let kaynakDataB = spheres.find(o => o.id === mevcutIdB);
+            let hedefDataB = spheres.find(o => o.id === sonrakiIdB);
+            let canlıKaynakMeshB = KuantumKafesi.getObjectByName(kaynakDataB.name);
+            let canlıHedefMeshB = KuantumKafesi.getObjectByName(hedefDataB.name);
+
+            if (canlıKaynakMeshA && canlıHedefMeshA && canlıKaynakMeshB && canlıHedefMeshB) {
+                // Gluon A fırlatılıyor (Hedef odanın öz renginde)
+                let yeniPaketA = new KuantumPaketi(canlıKaynakMeshA, canlıHedefMeshA, hedefDataA.color);
+                yeniPaketA.hedefId = sonrakiIdA;
+                yeniPaketA.tip = "A";
+                aktifPaketler.push(yeniPaketA);
+
+                // Gluon B fırlatılıyor (Ters yön, hedef odanın öz renginde)
+                let yeniPaketB = new KuantumPaketi(canlıKaynakMeshB, canlıHedefMeshB, hedefDataB.color);
+                yeniPaketB.hedefId = sonrakiIdB;
+                yeniPaketB.tip = "B";
+                aktifPaketler.push(yeniPaketB);
             }
         }
 
-        // --- 2. PAKETLERİN HAREKETİ VE AŞAMALI ROTASYON TETİKLEME ---
+        // --- 2. ÇİFT PARÇACIKLI HAREKET VE SENKRONİZE VURUŞ ---
+        let turuTamamla = false;
         for (let i = aktifPaketler.length - 1; i >= 0; i--) {
             let paket = aktifPaketler[i];
             paket.guncelle(delta);
 
-            // Parçacık odaya tam ulaştığı an (Merkezde kavuşma)
+            // Parçacıklardan herhangi biri odasına tam ulaştığında
             if (paket.ilerleme >= 1.0) {
                 let hedefData = spheres.find(o => o.id === paket.hedefId);
                 let hedefMesh = KuantumKafesi.getObjectByName(hedefData.name);
                 
                 if (hedefMesh) {
-                    // 1. Gluon odaya girdiğinde oda neon seviyesinde parlar
                     hedefMesh.material.emissiveIntensity = 4.0;
-                        // 🔑 IŞIKLANDIRMA KİLİDİ: Odanın saydamlığını anlık %100 yap ki ışık çıplak gözle patlasın!
-                        hedefMesh.material.opacity = 1.0; 
-                    // 2. 🔑 KİLİT NOKTA: Sürekli dönme kapalı! 
-                    // Sadece ve sadece paket odaya girince kafesi tek bir adım (aşama) döndürür
-                    //const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
-                    //KuantumKafesi.rotateOnAxis(anaAksVektoru, 0.15); // Sabit bir açıyla bir tık bükülme
+                    hedefMesh.material.opacity = 1.0;
                 }
                 
                 KuantumKafesi.remove(paket.mesh);
                 aktifPaketler.splice(i, 1);
-                aktifDiziIndex = (aktifDiziIndex + 1) % rodinDizisi.length; // Sıradaki odaya geç
+                turuTamamla = true;
             }
         }
 
-        // --- 3. DEŞARJ DÖNGÜSÜ (Odaların yavaşça sönerek kararması)
+        // Eğer paketler hedeflerine ulaştıysa kalbi bir tık attır ve sonraki odalara geç
+        if (turuTamamla && aktifPaketler.length === 0) {
+            // Beyaz-Siyah mili üzerinden aşamalı tek bir tık bükülme dönüşü
+            const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
+            KuantumKafesi.rotateOnAxis(anaAksVektoru, 0.15);
+
+            // İki bağımsız döngü indeksini de bir adım ileri kaydır
+            aktifIndexA = (aktifIndexA + 1) % rodinDizisiA.length;
+            aktifIndexB = (aktifIndexB + 1) % rodinDizisiB.length;
+        }
+
+        // --- 3. DEŞARJ DÖNGÜSÜ (Odaların sönmesi ve şeffaflaşması) ---
         spheres.forEach(s => {
             if (!s.isPole) {
                 let odaMesh = KuantumKafesi.getObjectByName(s.name);
                 if (odaMesh) {
-                    // Paket odadan çıktıktan sonra oda yavaşça sönerek başlangıç loşluğuna döner
-                    if (odaMesh.material.emissiveIntensity > 0.5) {
+                    if (odaMesh.material.emissiveIntensity > 0.05) {
                         odaMesh.material.emissiveIntensity -= delta * 4.0;
                     }
-                    // 🔑 ALFA/OPACITY AZALTMA: Oda meshinin saydamlığını (alphasını) da kademeli olarak düşür
-                    // Başlangıç cam kılavuz değeri olan 0.15 seviyesine kadar yumuşakça deşarj eder
                     if (odaMesh.material.opacity > 0.15) {
                         odaMesh.material.opacity -= delta * 2.5;
                     }
