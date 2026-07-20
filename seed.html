@@ -323,34 +323,34 @@ function animate() {
         }
     }
 
-    // 2. Enerji Paketinin Akışı ve Odaları Yakma Mantığı
-    for (let i = aktifPaketler.length - 1; i >= 0; i--) {
-        let paket = aktifPaketler[i];
-        paket.ilerleme += delta * 2.0; // Enerji akış hızı (Değiştirilebilir)
-        
-        // Odalar arası lineer kuantum sıçrama koordinatı
-        let anlikPoz = new THREE.Vector3().lerpVectors(paket.origin, paket.target, paket.ilerleme);
+// --- DİNAMİK ODALARI HAVADA TAKİP ETME MOTORU ---
+for (let i = aktifPaketler.length - 1; i >= 0; i--) {
+    let paket = aktifPaketler[i];
+    paket.ilerleme += delta * 2.0; // Akış hızı
+
+    // 🔑 KİLİT: Sabit koordinat (pos) yerine, odaların dönen canlı objelerini (Mesh) yakalıyoruz!
+    let kaynakMesh = scene.getObjectByName(odalar.find(o => o.id === rodinDizisi[aktifDiziIndex]).name);
+    let hedefMesh = scene.getObjectByName(odalar.find(o => o.id === paket.hedefId).name);
+
+    if (kaynakMesh && hedefMesh) {
+        // Paket dönen hedef odayı havada sarmal çizerek kovalıyor!
+        let anlikPoz = new THREE.Vector3().lerpVectors(kaynakMesh.position, hedefMesh.position, paket.ilerleme);
         if (paket.mesh) paket.mesh.position.copy(anlikPoz);
-
-        // Paket hedefe ulaştığında odayı ateşler ve söner
-        if (paket.ilerleme >= 1.0) {
-            let hedefOdaData = odalar.find(o => o.id === paket.hedefId);
-            let hedefMesh = scene.getObjectByName(hedefOdaData.name);
-            globalDönüşHızı += 0.002;
-            if (hedefMesh) {
-                // Enerji odaya girdi: Oda neon gibi parlar
-                hedefMesh.material.emissiveIntensity = 3.0; 
-                hedefMesh.material.opacity = 1.0;
-            }
-
-            if (paket.mesh) scene.add(new THREE.Mesh()); // Güvenli temizlik
-            scene.remove(paket.mesh);
-            aktifPaketler.splice(i, 1);
-            
-            // Rodin döngüsünü bir sonraki aşamaya geçir
-            aktifDiziIndex = (aktifDiziIndex + 1) % rodinDizisi.length;
-        }
     }
+
+    // Paket hedefe ulaştığında odayı ateşleme mantığı (Mevcut kodun aynen devam ediyor)
+    if (paket.ilerleme >= 1.0) {
+        let hedefMesh = scene.getObjectByName(odalar.find(o => o.id === paket.hedefId).name);
+        globalDönüşHızı += 0.002;
+        if (hedefMesh) {
+            hedefMesh.material.emissiveIntensity = 3.0;
+            hedefMesh.material.opacity = 1.0;
+        }
+        scene.remove(paket.mesh);
+        aktifPaketler.splice(i, 1);
+        aktifDiziIndex = (aktifDiziIndex + 1) % rodinDizisi.length;
+    }
+}
 
    // --- 3. ENERJİNİN DEŞARJ OLMASI VE EKSENEL ROTASYON (MOTOR) ---
     odalar.forEach(o => {
