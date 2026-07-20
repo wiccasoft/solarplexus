@@ -16,13 +16,6 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.146/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.146/examples/js/controls/OrbitControls.js"></script>
 <script>
-
-
-
-
-// Global Durum Kilitleri
-let aktifPaketler = [];
-let aksHizi = 0.0; // Odaların momentumlu dönüş torku
   const scene = new THREE.Scene();
 
   let currentAxis; // sahnedeki aktif eksen
@@ -94,10 +87,9 @@ function setPoles(northName, southName) {
   camera.position.set(5, 5, 5);
   camera.lookAt(0, 0, 0);
 
-// DÜZELTİLMİŞ VE SAF MOTOR ALANI (BUNUNLA DEĞİŞTİRİN):
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-// Mükerrer appendChild engeli elendi, saat ve döngü kilitlendi
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
   // OrbitControls → pan ve zoom açık
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -312,36 +304,133 @@ function setTopView(camera, controls) {
   controls.update();
 }
 
+ // --- BÜTÜNLEŞİK KUANTUM MOTORU VE PARÇACIK AKIŞI MATRİSİ ---
+const clock = new THREE.Clock();
+let tetrahedronTorku = 0.005; // Başlangıç dönüş ivmesi
+const MaksimumPaket = 24;      // Alandaki kararlı gluon yoğunluğu
+const AkisHizi = 1.8;          // Parçacıkların istasyonlar arası transfer hızı
 
+// Döngüsel İstasyon Sıralama Haritası (Kırmızı -> Turuncu -> Sarı -> Yeşil -> Mavi -> Mor)
+const döngüSirasi = [
+    "topFrontRight",   // Kırmızı
+    "topBackRight",    // Turuncu
+    "bottomBackRight", // Sarı
+    "bottomBackLeft",  // Yeşil
+    "bottomFrontLeft", // Mavi
+    "topFrontLeft"     // Mor
+];
 
-// --- BLOCKCHAIN 3D VERİ PAKETİ YAPISI ---
-class KuantumPaketi {
-    constructor(kaynak, hedef, frekans) {
-        this.origin = kaynak;  // Çıkış odası
-        this.target = hedef;  // Alıcı oda
-        this.frekans = frekans; // 174 (Pozitif) veya 285 (Negatif)
-        
-        // 3 Boyutlu yön ve momentum vektör bilgisi
-        this.yonVektoru = new THREE.Vector3(0, 0, 0);
-        this.ilerleme = 0.0; // Odalar arası Blockchain transfer yüzdesi
-        this.kiralite = frekans === 174 ? 1 : -1; // Saat yönü / Tersi spin bilgisi
-    }
-}
-// --- 12 AŞAMALI MANDALA AKS DÖNGÜSÜ ---
 function animate() {
     requestAnimationFrame(animate);
-    const progress = (clock.getElapsedTime() % TOTAL_CYCLE) / TOTAL_CYCLE;
-    const stage = Math.floor(progress * 12) + 1;
-    // ... (Mantık hesaplamaları burada tanımlanmıştır)
-    for (let i = aktifPaketler.length - 1; i >= 0; i--) {
-        // ... (oSphere, tSphere ve paket yön vektörleri güncellenir)
-        if (paket.ilerleme >= 1.0) aktifPaketler.splice(i, 1);
+    
+    const delta = clock.getDelta();
+    const time = clock.getElapsedTime();
+
+    // Siyah ve Beyaz kutup kürelerini sahneden dinamik yakala
+    const beyazKutup = scene.getObjectByName("topBackLeft");
+    const siyahKutup = scene.getObjectByName("bottomFrontRight");
+
+    if (!beyazKutup || !siyahKutup) {
+        if (controls) controls.update();
+        renderer.render(scene, camera);
+        return;
     }
+
+    // Siyah-Beyaz doğrultusunu ana dönüş omurgası (Aks) olarak kilitle
+    const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutup.position, siyahKutup.position).normalize();
+
+    // 1. Sıralı Renk Döngüsünde Kuantum Parçacığı (Gluon) Üretimi
+    if (aktifPaketler.length < MaksimumPaket) {
+        let rastgeleIndex = Math.floor(Math.random() * döngüSirasi.length);
+        let sonrakiIndex = (rastgeleIndex + 1) % döngüSirasi.length;
+        
+        let kaynakKure = scene.getObjectByName(döngüSirasi[rastgeleIndex]);
+        let hedefKure = scene.getObjectByName(döngüSirasi[sonrakiIndex]);
+
+        if (kaynakKure && hedefKure) {
+            // 174 (İlk 3 istasyon: Sağ) veya 285 (Son 3 istasyon: Sol) frekans ataması
+            let frekans = rastgeleIndex < 3 ? 174 : 285;
+            let yeniPaket = new KuantumPaketi(kaynakKure.position.clone(), hedefKure.position.clone(), frekans);
+            
+            // Parçacık görselleştirmesi (Işık noktası)
+            const pGeom = new THREE.SphereGeometry(0.04, 8, 8);
+            const pMat = new THREE.MeshBasicMaterial({ 
+                color: kaynakKure.material.color, 
+                transparent: true,
+                opacity: 0.95
+            });
+            yeniPaket.mesh = new THREE.Mesh(pGeom, pMat);
+            yeniPaket.mesh.position.copy(kaynakKure.position);
+            scene.add(yeniPaket.mesh);
+            
+            aktifPaketler.push(yeniPaket);
+        }
+    }
+
+    // 2. Paketlerin Akışı ve İstasyonlara Momentun (Tork) Aktarımı
+    for (let i = aktifPaketler.length - 1; i >= 0; i--) {
+        let paket = aktifPaketler[i];
+        paket.ilerleme += delta * AkisHizi;
+
+        // İstasyonlar arası bükülerek (vortex/spiral) ilerleme simülasyonu
+        let anlikPoz = new THREE.Vector3().lerpVectors(paket.origin, paket.target, paket.ilerleme);
+        
+        // Siyah-Beyaz aksının oluşturduğu yerçekimsel kiral bükülme efekti
+        let bükülmeMiktari = Math.sin(paket.ilerleme * Math.PI) * 0.15 * paket.kiralite;
+        anlikPoz.addScaledVector(anaAksVektoru.clone().cross(new THREE.Vector3(1,0,0)), bükülmeMiktari);
+
+        if (paket.mesh) paket.mesh.position.copy(anlikPoz);
+
+        // Paket hedefe ulaştığında tork biriktirir ve yok olur
+        if (paket.ilerleme >= 1.0) {
+            if (paket.mesh) scene.remove(paket.mesh);
+            
+            // 174 ivmeyi artırır (sağ), 285 frenler/ters ivme verir (sol)
+            if (paket.frekans === 174) {
+                tetrahedronTorku += 0.003;
+            } else {
+                tetrahedronTorku -= 0.003;
+            }
+            
+            aktifPaketler.splice(i, 1);
+        }
+    }
+
+    // 3. Biriken Tork ile Geometrinin Siyah-Beyaz Aksında Döndürülmesi
+    // Uzaydaki sürtünme etkisi (Sonsuz hızlanmayı engeller, dengeye getirir)
+    tetrahedronTorku *= 0.97; 
+    // Alt sınır kararlı dönüş hızı (Motorun durmamasını sağlar)
+    if (Math.abs(tetrahedronTorku) < 0.002) tetrahedronTorku = 0.002;
+
+    spheres.forEach(s => {
+        let kureObj = scene.getObjectByName(s.name);
+        if (kureObj) {
+            // Siyah ve Beyaz kutup noktalarının kendisi aksı oluşturduğu için sabit kalır,
+            // diğer renkli istasyonlar bu ana omurga etrafında fırıl fırıl döner.
+            if (s.name !== "topBackLeft" && s.name !== "bottomFrontRight") {
+                kureObj.position.applyAxisAngle(anaAksVektoru, tetrahedronTorku * delta * 50);
+            }
+        }
+    });
+
+    // 4. Eksen Çizgisini Güncel Tut
+    if (currentAxis) {
+        scene.remove(currentAxis);
+        const length = 10;
+        const from = beyazKutup.position.clone().add(anaAksVektoru.clone().multiplyScalar(-length));
+        const to = beyazKutup.position.clone().add(anaAksVektoru.clone().multiplyScalar(length));
+        const axisGeom = new THREE.BufferGeometry().setFromPoints([from, to]);
+        const axisMat = new THREE.LineBasicMaterial({ color: 0x00ff00, opacity: 0.5, transparent: true });
+        currentAxis = new THREE.Line(axisGeom, axisMat);
+        scene.add(currentAxis);
+    }
+
     if (controls) controls.update();
     renderer.render(scene, camera);
 }
-// Mühürlü tetikleyici ve animasyon başlatıcı buradadır.
-// ... (Başlatma kodları içinde)
+
+// Zamanlayıcı saat nesnesini başlat ve motoru ateşle
+const clockX = new THREE.Clock(); // Çakışmayı önlemek için üstteki clock kullanılıyor
 animate();
 </script>
 </body>
