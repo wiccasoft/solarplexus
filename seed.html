@@ -353,28 +353,80 @@ let aktifDiziIndex = 0;
 // ============================================================================
 let globalDönüşHızı = 0.005; // Kararlı baseline dönüş momentumu
 
+// ============================================================================
+// BÖLÜM 4: ADIM ADIM TETİKLENEN GLUON VE AŞAMALI ROTASYON MOTORU
+// ============================================================================
+const clock = new THREE.Clock();
+
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
 
-    // Dönen KuantumKafesi içinden canlı Siyah-Beyaz kutup odalarını yakala
+    // Dönen Kafes İçindeki Canlı Kutup Odalarını Yakala
     const beyazKutupObj = KuantumKafesi.getObjectByName("BEYAZ_KUTUP_ODASI");
     const siyahKutupObj = KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");
 
     if (beyazKutupObj && siyahKutupObj) {
-        // İki oda arasında dinamik bir elektromanyetik mil (vektör) oluştur
-        const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
-        
-        // 🔑 KİLİT: Tüm odaları, sarı kareleri ve tetrahedronları bu aks üzerinde tek kütle olarak döndür!
-        KuantumKafesi.rotateOnAxis(anaAksVektoru, globalDönüşHızı * delta * 25);
+        // --- 1. SÜREKLİ 124875 GLUON PAKETİ FIRLATMA ---
+        if (aktifPaketler.length === 0) {
+            let mevcutId = rodinDizisi[aktifDiziIndex];
+            let sonrakiId = rodinDizisi[(aktifDiziIndex + 1) % rodinDizisi.length];
+            
+            let kaynakData = spheres.find(o => o.id === mevcutId);
+            let hedefData = spheres.find(o => o.id === sonrakiId);
+            
+            let canlıKaynakMesh = KuantumKafesi.getObjectByName(kaynakData.name);
+            let canlıHedefMesh = KuantumKafesi.getObjectByName(hedefData.name);
+            
+            if (canlıKaynakMesh && canlıHedefMesh) {
+                let yeniPaket = new KuantumPaketi(canlıKaynakMesh, canlıHedefMesh, kaynakData.color);
+                yeniPaket.hedefId = sonrakiId;
+                aktifPaketler.push(yeniPaket);
+            }
+        }
+
+        // --- 2. PAKETLERİN HAREKETİ VE AŞAMALI ROTASYON TETİKLEME ---
+        for (let i = aktifPaketler.length - 1; i >= 0; i--) {
+            let paket = aktifPaketler[i];
+            paket.guncelle(delta);
+
+            // Parçacık odaya tam ulaştığı an (Merkezde kavuşma)
+            if (paket.ilerleme >= 1.0) {
+                let hedefData = spheres.find(o => o.id === paket.hedefId);
+                let hedefMesh = KuantumKafesi.getObjectByName(hedefData.name);
+                
+                if (hedefMesh) {
+                    // 1. Gluon odaya girdiğinde oda neon seviyesinde parlar
+                    hedefMesh.material.emissiveIntensity = 4.0;
+                    
+                    // 2. 🔑 KİLİT NOKTA: Sürekli dönme kapalı! 
+                    // Sadece ve sadece paket odaya girince kafesi tek bir adım (aşama) döndürür
+                    const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
+                    KuantumKafesi.rotateOnAxis(anaAksVektoru, 0.15); // Sabit bir açıyla bir tık bükülme
+                }
+                
+                KuantumKafesi.remove(paket.mesh);
+                aktifPaketler.splice(i, 1);
+                aktifDiziIndex = (aktifDiziIndex + 1) % rodinDizisi.length; // Sıradaki odaya geç
+            }
+        }
+
+        // --- 3. DEŞARJ DÖNGÜSÜ (Odaların yavaşça sönerek kararması)
+        spheres.forEach(s => {
+            if (!s.isPole) {
+                let odaMesh = KuantumKafesi.getObjectByName(s.name);
+                if (odaMesh && odaMesh.material.emissiveIntensity > 0.5) {
+                    odaMesh.material.emissiveIntensity -= delta * 3.0;
+                }
+            }
+        });
     }
 
     if (typeof controls !== 'undefined') controls.update();
     renderer.render(scene, camera);
 }
 
-// Zamanlayıcıyı başlat ve motoru ateşle
-const clock = new THREE.Clock();
+// Motoru ateşle
 animate();
 </script>
 </body>
