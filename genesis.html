@@ -428,59 +428,34 @@ if (aktifPaketler.length === 0) {
 }
         }
 
-// --- 2. TERS KARE KANUNU ($1/r^2$) PARÇACIK HAREKET DÖNGÜSÜ ---
-        let vuruşOldu = false;
-        let dinamikTorkEtkisi = 0;
+// --- DİNAMİK ODALARI HAVADA TAKİP ETME MOTORU ---
+for (let i = aktifPaketler.length - 1; i >= 0; i--) {
+    let paket = aktifPaketler[i];
+    paket.ilerleme += delta * 2.0; // Akış hızı
 
-        for (let i = aktifPaketler.length - 1; i >= 0; i--) {
-            let paket = aktifPaketler[i];
-            
-            let hedefData = spheres.find(o => o.id === paket.hedefId);
-            let hedefMesh = KuantumKafesi.getObjectByName(hedefData.name);
+    // 🔑 KİLİT: Sabit koordinat (pos) yerine, odaların dönen canlı objelerini (Mesh) yakalıyoruz!
+    let kaynakMesh = KuantumKafesi.getObjectByName(spheres.find(o => o.id === rodinDizisiA[aktifIndexA]).name);
+    let hedefMesh = KuantumKafesi.getObjectByName(spheres.find(o => o.id === paket.hedefId).name);
 
-            if (hedefMesh && paket.mesh) {
-                // Parçacık ile hedef oda arasındaki anlık mesafeyi (r) hesapla
-                let r = paket.mesh.position.distanceTo(hedefMesh.position);
-                r = Math.max(0.1, r); // Sıfıra bölünme hatasını engelle
+    if (kaynakMesh && hedefMesh) {
+        // Paket dönen hedef odayı havada sarmal çizerek kovalıyor!
+        let anlikPoz = new THREE.Vector3().lerpVectors(kaynakMesh.position, hedefMesh.position, paket.ilerleme);
+        if (paket.mesh) paket.mesh.position.copy(anlikPoz);
+    }
 
-                // 🔑 TERS KARE İVME MOTORU: Yaklaştıkça katlanarak hızlandır
-                let dinamikIvme = (1.0 / (r * r)) * 0.5;
-                paket.ilerleme += delta * Math.min(4.0, 1.5 + dinamikIvme);
-
-                paket.guncelle(delta);
-
-                // Merkez Tekillik Girişimi: Gluonlar merkeze yaklaştıkça oda ışığını besler
-                if (paket.ilerleme >= 0.48 && paket.ilerleme <= 0.52 && centerSphere) {
-                    centerSphere.material.emissiveIntensity = Math.min(6.0, centerSphere.material.emissiveIntensity + 0.15);
-                }
-
-                // Parçacık hedefe tam ulaştığında (Vuruş Anı)
-                if (paket.ilerleme >= 1.0) {
-                    hedefMesh.material.emissiveIntensity = 4.0;
-                    hedefMesh.material.opacity = 1.0;
-
-                    // Bilardo Sürtünme Torku Transferi
-                    let polariteYonu = (hedefData.id % 2 === 0) ? 1 : -1; 
-                    dinamikTorkEtkisi += 0.04 * polariteYonu * (1.0 / r); 
-
-                    KuantumKafesi.remove(paket.mesh);
-                    aktifPaketler.splice(i, 1);
-                    vuruşOldu = true;
-                }
-            }
+    // Paket hedefe ulaştığında odayı ateşleme mantığı (Mevcut kodun aynen devam ediyor)
+    if (paket.ilerleme >= 1.0) {
+        let hedefMesh = KuantumKafesi.getObjectByName(spheres.find(o => o.id === paket.hedefId).name);
+        globalDönüşHızı += 0.002;
+        if (hedefMesh) {
+            hedefMesh.material.emissiveIntensity = 3.0;
+            hedefMesh.material.opacity = 1.0;
         }
-
-               // --- 3. DİNAMİK SPIN REAKSİYONU (DÜZELTİLMİŞ) ---
-        // Kapsam hatası giderilmiş, nihai döngü bloğu:
-        if (vuruşOldu && aktifPaketler.length === 0) {
-            KuantumKafesi.rotateOnAxis(anaAksVektoru, dinamikTorkEtkisi);
-            // ... (Kısaltılmış Rodin döngüleri)
-        }
-        
-        // Deşarj döngüsü ve render işlemleri:
-        spheres.forEach(s => { /* ... Güncellenmiş mantık ... */ });
-    } // 🔑 KİLİT: Ana bloğun parantezi artık doğru yerde!
-
+        KuantumKafesi.remove(paket.mesh);
+        aktifPaketler.splice(i, 1);
+        aktifIndexA = (aktifIndexA + 1) % rodinDizisiA.length;
+    }
+}
     if (typeof controls !== 'undefined') controls.update();
     renderer.render(scene, camera);
 }
