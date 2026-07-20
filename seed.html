@@ -201,18 +201,18 @@ let globalDönüşHızı = 0.005;
 const KuantumKafesi = new THREE.Group();
 scene.add(KuantumKafesi);
 
-// 1. Odaların Türkçe Kimlik, Renk ve Koordinat Haritası
+// --- KUTSAL MATEMATİK UYUMLU ODA KİMLİKLERİ ---
 const odalar = [
-    { id: 1, name: "KIRMIZI_ENERJI_ODASI", pos: new THREE.Vector3( 0.25,  0.25,  0.25), color: 0xff0000, isPole: false }, // 1
-    { id: 2, name: "TURUNCU_EMICI_ODA",    pos: new THREE.Vector3( 0.25,  0.25, -0.25), color: 0xff6600, isPole: false }, // 2
-    { id: 4, name: "SARI_ITICI_ODA",       pos: new THREE.Vector3( 0.25, -0.25, -0.25), color: 0xffff00, isPole: false }, // 4
-    { id: 8, name: "YESIL_ENERJI_ODASI",   pos: new THREE.Vector3(-0.25, -0.25, -0.25), color: 0x00ff00, isPole: false }, // 8
-    { id: 7, name: "MAVI_KALKAN_ODASI",    pos: new THREE.Vector3(-0.25, -0.25,  0.25), color: 0x0000ff, isPole: false }, // 7
-    { id: 5, name: "MOR_KABUK_ODASI",      pos: new THREE.Vector3(-0.25,  0.25,  0.25), color: 0x660099, isPole: false }, // 5
+    { id: 1, name: "KIRMIZI_ENERJI_ODASI", pos: new THREE.Vector3( 0.25,  0.25,  0.25), color: 0xff0000, isPole: false },
+    { id: 2, name: "TURUNCU_EMICI_ODA",    pos: new THREE.Vector3( 0.25,  0.25, -0.25), color: 0xff6600, isPole: false },
+    { id: 4, name: "SARI_ITICI_ODA",       pos: new THREE.Vector3( 0.25, -0.25, -0.25), color: 0xffff00, isPole: false },
+    { id: 8, name: "YESIL_ENERJI_ODASI",   pos: new THREE.Vector3(-0.25, -0.25, -0.25), color: 0x00ff00, isPole: false },
+    { id: 7, name: "MAVI_KALKAN_ODASI",    pos: new THREE.Vector3(-0.25, -0.25,  0.25), color: 0x0000ff, isPole: false },
+    { id: 5, name: "MOR_KABUK_ODASI",      pos: new THREE.Vector3(-0.25,  0.25,  0.25), color: 0x660099, isPole: false },
     
-    // Eksen Kutup Odaları (Sürekli Açık Kalacak Olanlar)
-    { id: 9, name: "BEYAZ_KUTUP_ODASI",    pos: new THREE.Vector3(-0.25,  0.25, -0.25), color: 0xffffff, isPole: true },
-    { id: 0, name: "SIYAH_KUTUP_ODASI",    pos: new THREE.Vector3( 0.25, -0.25,  0.25), color: 0x222222, isPole: true }
+    // 🔑 Eksen Manyetik Kutup Odaları (Rodin Matrisi Ayarı)
+    { id: 3, name: "BEYAZ_KUTUP_ODASI",    pos: new THREE.Vector3(-0.25,  0.25, -0.25), color: 0xffffff, isPole: true }, // BEYAZ = 3
+    { id: 6, name: "SIYAH_KUTUP_ODASI",    pos: new THREE.Vector3( 0.25, -0.25,  0.25), color: 0x222222, isPole: true }  // SİYAH = 6
 ];
 
 // Odaları Sahneye Ekleme Döngüsü
