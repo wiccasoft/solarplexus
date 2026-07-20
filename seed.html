@@ -16,6 +16,14 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.146/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.146/examples/js/controls/OrbitControls.js"></script>
 <script>
+
+
+// ============================================================================
+// ADIM 1: ANA KUANTUM KAFES GRUBUNUN AÇILMASI
+// ============================================================================
+const KuantumKafesi = new THREE.Group(); // Tüm parçaları birbirine kilitleyecek mil
+scene.add(KuantumKafesi);
+
   const scene = new THREE.Scene();
 
   let currentAxis; // sahnedeki aktif eksen
@@ -140,7 +148,8 @@ controls.maxAzimuthAngle = Infinity;
     const squareGeom = new THREE.BufferGeometry();
     squareGeom.setAttribute('position', new THREE.Float32BufferAttribute(squareVertices,3));
     const squareMat = new THREE.LineBasicMaterial({color:0xffff00});
-    scene.add(new THREE.LineSegments(squareGeom, squareMat));
+    //scene.add(new THREE.LineSegments(squareGeom, squareMat));
+    KuantumKafesi.add(new THREE.LineSegments(squareGeom, squareMat));
 
     const u = new THREE.Vector3(f.normal.y, f.normal.z, f.normal.x).normalize();
     const v = new THREE.Vector3().crossVectors(f.normal, u).normalize();
@@ -152,7 +161,8 @@ controls.maxAzimuthAngle = Infinity;
     const plusGeom = new THREE.BufferGeometry();
     plusGeom.setAttribute('position', new THREE.Float32BufferAttribute(plusVertices,3));
     const plusMat = new THREE.LineBasicMaterial({color:0xaaaaaa});
-    scene.add(new THREE.LineSegments(plusGeom, plusMat));
+    //scene.add(new THREE.LineSegments(plusGeom, plusMat));
+    KuantumKafesi.add(new THREE.LineSegments(plusGeom, plusMat));
   });
 
   // Eksenler
@@ -188,8 +198,8 @@ addAxis(0x00ff00, blackPos, whitePos);
   const pyramidGeom = new THREE.BufferGeometry();
   pyramidGeom.setAttribute('position', new THREE.Float32BufferAttribute(pyramidVertices,3));
   const pyramidMat = new THREE.LineBasicMaterial({color:0xffffff});
-  scene.add(new THREE.LineSegments(pyramidGeom, pyramidMat));
-
+  //scene.add(new THREE.LineSegments(pyramidGeom, pyramidMat));
+  KuantumKafesi.add(new THREE.LineSegments(pyramidGeom, pyramidMat));
   // Tetrahedron köşeleri (küçük ölçekli, kübün içinde)
 const tetra1 = [
   new THREE.Vector3( 0.25,  0.25,  0.25), // topFrontRight -> KIRMIZI
@@ -215,7 +225,8 @@ const tetra2 = [
     const geom = new THREE.BufferGeometry();
     geom.setAttribute('position', new THREE.Float32BufferAttribute(tetraVertices,3));
     const mat = new THREE.LineBasicMaterial({color:color});
-    scene.add(new THREE.LineSegments(geom, mat));
+    //scene.add(new THREE.LineSegments(geom, mat));
+      KuantumKafesi.add(new THREE.LineSegments(geom, mat));
   }
 
   // Beyaz ve gri tetrahedron ekle
@@ -251,7 +262,8 @@ spheres.forEach(s=>{
   const sphere = new THREE.Mesh(geom, mat);
   sphere.position.copy(s.pos);
   sphere.name = s.name; // obje adı
-  scene.add(sphere);
+  //scene.add(sphere);
+   KuantumKafesi.add(sphere);
 });
 
 // Küre materyali (saydam)
