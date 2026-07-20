@@ -252,19 +252,25 @@ const spheres = [
   { id: 6, name: "SIYAH_KUTUP_ODASI",    pos: new THREE.Vector3( 0.25, -0.25,  0.25), color: 0x222222, isPole: true }
 ];
 
-// Sahneye ekleme
-spheres.forEach(s=>{
+// ============================================================================
+// ADIM 5: ODALARI BAŞLANGIÇTA YARI SAYDAM CAMA DÖNÜŞTÜRME (Satır 245 - 258)
+// ============================================================================
+spheres.forEach(s => {
   const geom = new THREE.SphereGeometry(sphereRadius, 32, 32);
+  
+  // Siyah ve Beyaz kutup mili kalıcı parlar, diğer odalar (124875) başlangıçta loş ve saydamdır
   const mat = new THREE.MeshPhongMaterial({
     color: s.color,
     emissive: s.color,
-    emissiveIntensity: 0.5
+    emissiveIntensity: s.isPole ? 1.0 : 0.05, // Başlangıçta neredeyse sıfır emisyon
+    transparent: true,
+    opacity: s.isPole ? 1.0 : 0.15           // Başlangıçta %15 alfa (yarı saydam cam kafes)
   });
+  
   const sphere = new THREE.Mesh(geom, mat);
   sphere.position.copy(s.pos);
-  sphere.name = s.name; // obje adı
-  //scene.add(sphere);
-   KuantumKafesi.add(sphere);
+  sphere.name = s.name; 
+  KuantumKafesi.add(sphere);
 });
 
 // Küre materyali (saydam)
