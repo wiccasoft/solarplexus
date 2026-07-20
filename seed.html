@@ -373,19 +373,20 @@ function animate() {
     const siyahKutupObj = KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");
 
     if (beyazKutupObj && siyahKutupObj) {
-        // --- 1. SÜREKLİ 124875 GLUON PAKETİ FIRLATMA ---
+   // --- 1. SÜREKLİ 124875 GLUON PAKETİ FIRLATMA ---
         if (aktifPaketler.length === 0) {
             let mevcutId = rodinDizisi[aktifDiziIndex];
             let sonrakiId = rodinDizisi[(aktifDiziIndex + 1) % rodinDizisi.length];
             
             let kaynakData = spheres.find(o => o.id === mevcutId);
-            let hedefData = spheres.find(o => o.id === sonrakiId);
+            let hedonData = spheres.find(o => o.id === sonrakiId);
             
             let canlıKaynakMesh = KuantumKafesi.getObjectByName(kaynakData.name);
-            let canlıHedefMesh = KuantumKafesi.getObjectByName(hedefData.name);
+            let canlıHedefMesh = KuantumKafesi.getObjectByName(hedonData.name);
             
             if (canlıKaynakMesh && canlıHedefMesh) {
-                let yeniPaket = new KuantumPaketi(canlıKaynakMesh, canlıHedefMesh, kaynakData.color);
+                // 🔑 KİLİT DÜZELTME: Paket rengini kaynakData yerine doğrudan HEDEF odanın kendi öz rengine (hedonData.color) kilitledik!
+                let yeniPaket = new KuantumPaketi(canlıKaynakMesh, canlıHedefMesh, hedonData.color);
                 yeniPaket.hedefId = sonrakiId;
                 aktifPaketler.push(yeniPaket);
             }
