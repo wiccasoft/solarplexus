@@ -308,20 +308,25 @@ function animate() {
     const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
     
     
-    // 1. Kararlı Enerji Akışı Tetikleyicisi (Sıradaki odaya paket fırlatır)
-    if (aktifPaketler.length === 0) {
-        let mevcutId = rodinDizisi[aktifDiziIndex];
-        let sonrakiId = rodinDizisi[(aktifDiziIndex + 1) % rodinDizisi.length];
-        
-        let kaynakOdaData = odalar.find(o => o.id === mevcutId);
-        let hedefOdaData = odalar.find(o => o.id === sonrakiId);
-        
-        if (kaynakOdaData && hedefOdaData) {
-            let yeniPaket = new KuantumPaketi(kaynakOdaData.pos, hedefOdaData.pos, kaynakOdaData.color);
-            yeniPaket.hedefId = sonrakiId;
-            aktifPaketler.push(yeniPaket);
+    // --- NİHAİ SENKRONİZASYON: CANLI GEOMETRİK TETİKLEYİCİ ---
+        if (aktifPaketler.length === 0) {
+            let mevcutId = rodinDizisi[aktifDiziIndex];
+            let sonrakiId = rodinDizisi[(aktifDiziIndex + 1) % rodinDizisi.length];
+            
+            let kaynakOdaData = odalar.find(o => o.id === mevcutId);
+            let hedefOdaData = odalar.find(o => o.id === sonrakiId);
+            
+            // Sabit .pos verisi yerine, KuantumKafesi içindeki canlı Mesh pozisyonlarını referans alıyoruz
+            let canlıKaynakMesh = KuantumKafesi.getObjectByName(kaynakOdaData.name);
+            let canlıHedefMesh = KuantumKafesi.getObjectByName(hedefOdaData.name);
+            
+            if (canlıKaynakMesh && canlıHedefMesh) {
+                // Parçacık fırlatılırken odaların anlık dönen koordinat verileriyle beslenir
+                let yeniPaket = new KuantumPaketi(canlıKaynakMesh.position, canlıHedefMesh.position, kaynakOdaData.color);
+                yeniPaket.hedefId = sonrakiId;
+                aktifPaketler.push(yeniPaket);
+            }
         }
-    }
 
 // --- 1. AŞAMA: AKILLI HEDEFE KİLİTLENME MOTORU ---
 for (let i = aktifPaketler.length - 1; i >= 0; i--) {
