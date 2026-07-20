@@ -200,20 +200,24 @@ addAxis(0x00ff00, blackPos, whitePos);
   //scene.add(new THREE.LineSegments(pyramidGeom, pyramidMat));
   KuantumKafesi.add(new THREE.LineSegments(pyramidGeom, pyramidMat));
   // Tetrahedron köşeleri (küçük ölçekli, kübün içinde)
+// ============================================================================
+// BÖLÜM 6: AKSA HİZALI KUTSAL MERKABA KÖŞELERİ (Satır 171 - 182 ARASI)
+// ============================================================================
+// Tetrahedron 1: Beyaz Kutup merkezli göksel enerji piramidi
 const tetra1 = [
+  new THREE.Vector3(-0.25,  0.25, -0.25), // topBackLeft -> BEYAZ KUTUP (Tepe)
   new THREE.Vector3( 0.25,  0.25,  0.25), // topFrontRight -> KIRMIZI
-  new THREE.Vector3(-0.25,  0.25,  0.25), // topFrontLeft  -> MAVI
-  new THREE.Vector3( 0.25,  0.25, -0.25), // topBackRight  -> SARI
-  new THREE.Vector3( 0.25, -0.25,  0.25)  // bottomFrontRight -> SIYAH
-];
-
-const tetra2 = [
   new THREE.Vector3( 0.25, -0.25, -0.25), // bottomBackRight -> TURUNCU
-  new THREE.Vector3(-0.25, -0.25,  0.25), // bottomFrontLeft -> MOR
-  new THREE.Vector3(-0.25, -0.25, -0.25), // bottomBackLeft  -> YESIL
-  new THREE.Vector3(-0.25,  0.25, -0.25)  // topBackLeft     -> BEYAZ
+  new THREE.Vector3(-0.25, -0.25,  0.25)  // bottomFrontLeft -> MOR
 ];
 
+// Tetrahedron 2: Siyah Kutup merkezli yersel manyetik piramit
+const tetra2 = [
+  new THREE.Vector3( 0.25, -0.25,  0.25), // bottomFrontRight -> SİYAH KUTUP (Taban)
+  new THREE.Vector3(-0.25, -0.25, -0.25), // bottomBackLeft -> YEŞİL
+  new THREE.Vector3( 0.25,  0.25, -0.25), // topBackRight -> SARI
+  new THREE.Vector3(-0.25,  0.25,  0.25)  // topFrontLeft -> MAVİ
+];
   function addTetrahedron(vertices, color) {
     const edges = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
     const tetraVertices = [];
