@@ -144,119 +144,46 @@ controls.maxAzimuthAngle = Infinity;
 
   scene.add(new THREE.AmbientLight(0xffffff));
 
-  // Küp köşeleri
-  const corners = [
-    new THREE.Vector3(0.5,0.5,0.5),
-    new THREE.Vector3(0.5,0.5,-0.5),
-    new THREE.Vector3(0.5,-0.5,0.5),
-    new THREE.Vector3(0.5,-0.5,-0.5),
-    new THREE.Vector3(-0.5,0.5,0.5),
-    new THREE.Vector3(-0.5,0.5,-0.5),
-    new THREE.Vector3(-0.5,-0.5,0.5),
-    new THREE.Vector3(-0.5,-0.5,-0.5)
-  ];
+  // ============================================================================
+// BÖLÜM 2: SENKRONİZE GEOMETRİK İSKELET MATRİSİ (147 - 259)
+// ============================================================================
 
-  // Yüzeyler: köşeler + merkez + normal
-  const faces = [
-    {corners:[corners[0], corners[2], corners[3], corners[1]], center:new THREE.Vector3(0.5,0,0), normal:new THREE.Vector3(1,0,0)},
-    {corners:[corners[4], corners[6], corners[7], corners[5]], center:new THREE.Vector3(-0.5,0,0), normal:new THREE.Vector3(-1,0,0)},
-    {corners:[corners[0], corners[4], corners[5], corners[1]], center:new THREE.Vector3(0,0.5,0), normal:new THREE.Vector3(0,1,0)},
-    {corners:[corners[2], corners[6], corners[7], corners[3]], center:new THREE.Vector3(0,-0.5,0), normal:new THREE.Vector3(0,-1,0)},
-    {corners:[corners[0], corners[2], corners[6], corners[4]], center:new THREE.Vector3(0,0,0.5), normal:new THREE.Vector3(0,0,1)},
-    {corners:[corners[1], corners[3], corners[7], corners[5]], center:new THREE.Vector3(0,0,-0.5), normal:new THREE.Vector3(0,0,-1)}
-  ];
-
-  // Sarı kareler + gri “+” işaretleri
-  faces.forEach(f=>{
-    const squareVertices = [];
-    for (let i=0; i<f.corners.length; i++) {
-      squareVertices.push(...f.corners[i].toArray());
-      squareVertices.push(...f.corners[(i+1)%4].toArray());
-    }
-    const squareGeom = new THREE.BufferGeometry();
-    squareGeom.setAttribute('position', new THREE.Float32BufferAttribute(squareVertices,3));
-    const squareMat = new THREE.LineBasicMaterial({color:0xffff00});
-    scene.add(new THREE.LineSegments(squareGeom, squareMat));
-
-    const u = new THREE.Vector3(f.normal.y, f.normal.z, f.normal.x).normalize();
-    const v = new THREE.Vector3().crossVectors(f.normal, u).normalize();
-    const plusVertices = [];
-    plusVertices.push(...f.center.clone().add(u.clone().multiplyScalar(0.5)).toArray());
-    plusVertices.push(...f.center.clone().add(u.clone().multiplyScalar(-0.5)).toArray());
-    plusVertices.push(...f.center.clone().add(v.clone().multiplyScalar(0.5)).toArray());
-    plusVertices.push(...f.center.clone().add(v.clone().multiplyScalar(-0.5)).toArray());
-    const plusGeom = new THREE.BufferGeometry();
-    plusGeom.setAttribute('position', new THREE.Float32BufferAttribute(plusVertices,3));
-    const plusMat = new THREE.LineBasicMaterial({color:0xaaaaaa});
-    scene.add(new THREE.LineSegments(plusGeom, plusMat));
-  });
-
-  // Eksenler
-  function addAxis(color, from, to) {
-    const axisGeom = new THREE.BufferGeometry().setFromPoints([from,to]);
-    const axisMat = new THREE.LineBasicMaterial({color:color});
-    scene.add(new THREE.Line(axisGeom, axisMat));
-  }
- // addAxis(0xff0000, new THREE.Vector3(-10,0,0), new THREE.Vector3(10,0,0));
- // addAxis(0x00ff00, new THREE.Vector3(0,-10,0), new THREE.Vector3(0,10,0));
- // addAxis(0x0000ff, new THREE.Vector3(0,0,-10), new THREE.Vector3(0,0,10));
-
-
-
-// Beyaz ve siyah kürelerin pozisyonları
-const whitePos = new THREE.Vector3(-0.25, 0.25, -0.25);
-const blackPos = new THREE.Vector3(0.25, -0.25, 0.25);
-
-
-// Yeşil eksen: beyaz ve siyah küreleri birleştiren çizgi
-addAxis(0x00ff00, blackPos, whitePos);
-
-
-
-
-  // Merkezden köşelere çizgiler (beyaz)
-  const center = new THREE.Vector3(0,0,0);
-  const pyramidVertices = [];
-  corners.forEach(c=>{
-    pyramidVertices.push(...center.toArray());
-    pyramidVertices.push(...c.toArray());
-  });
-  const pyramidGeom = new THREE.BufferGeometry();
-  pyramidGeom.setAttribute('position', new THREE.Float32BufferAttribute(pyramidVertices,3));
-  const pyramidMat = new THREE.LineBasicMaterial({color:0xffffff});
-  scene.add(new THREE.LineSegments(pyramidGeom, pyramidMat));
-
-  // Tetrahedron köşeleri (küçük ölçekli, kübün içinde)
-const tetra1 = [
-  new THREE.Vector3( 0.25,  0.25,  0.25), // topFrontRight -> KIRMIZI
-  new THREE.Vector3(-0.25,  0.25,  0.25), // topFrontLeft  -> MAVI
-  new THREE.Vector3( 0.25,  0.25, -0.25), // topBackRight  -> SARI
-  new THREE.Vector3( 0.25, -0.25,  0.25)  // bottomFrontRight -> SIYAH
+// 1. Küp Köşelerinin Vektör Kümesi (Optimize Edilmiş)
+const corners = [
+  new THREE.Vector3( 0.5,  0.5,  0.5), new THREE.Vector3( 0.5,  0.5, -0.5),
+  new THREE.Vector3( 0.5, -0.5,  0.5), new THREE.Vector3( 0.5, -0.5, -0.5),
+  new THREE.Vector3(-0.5,  0.5,  0.5), new THREE.Vector3(-0.5,  0.5, -0.5),
+  new THREE.Vector3(-0.5, -0.5,  0.5), new THREE.Vector3(-0.5, -0.5, -0.5)
 ];
 
-const tetra2 = [
-  new THREE.Vector3( 0.25, -0.25, -0.25), // bottomBackRight -> TURUNCU
-  new THREE.Vector3(-0.25, -0.25,  0.25), // bottomFrontLeft -> MOR
-  new THREE.Vector3(-0.25, -0.25, -0.25), // bottomBackLeft  -> YESIL
-  new THREE.Vector3(-0.25,  0.25, -0.25)  // topBackLeft     -> BEYAZ
+// 2. Basit Geometri Oluşturma Fonksiyonu (Hata önleme için sadeleştirildi)
+function createWireframe(vertices, color) {
+  const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
+  return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: color }));
+}
+
+// 3. Küp Çerçevesi (Sarı)
+const cubeEdges = [
+  corners[0], corners[1], corners[1], corners[3], corners[3], corners[2], corners[2], corners[0],
+  corners[4], corners[5], corners[5], corners[7], corners[7], corners[6], corners[6], corners[4],
+  corners[0], corners[4], corners[1], corners[5], corners[2], corners[6], corners[3], corners[7]
 ];
+KuantumKafesi.add(createWireframe(cubeEdges, 0xffff00));
 
-  function addTetrahedron(vertices, color) {
-    const edges = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
-    const tetraVertices = [];
-    edges.forEach(e=>{
-      tetraVertices.push(...vertices[e[0]].toArray());
-      tetraVertices.push(...vertices[e[1]].toArray());
-    });
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.Float32BufferAttribute(tetraVertices,3));
-    const mat = new THREE.LineBasicMaterial({color:color});
-    scene.add(new THREE.LineSegments(geom, mat));
-  }
+// 4. İç Tetrahedronlar (Merkaba)
+const tetra1 = [corners[0], corners[3], corners[5], corners[6]];
+const tetra2 = [corners[1], corners[2], corners[4], corners[7]];
 
-  // Beyaz ve gri tetrahedron ekle
-  addTetrahedron(tetra1, 0xffffff);
-  addTetrahedron(tetra2, 0xaaaaaa);// Küre materyali (saydam)
+function addTetrahedron(verts, color) {
+  const edges = [
+    verts[0], verts[1], verts[1], verts[2], verts[2], verts[0],
+    verts[0], verts[3], verts[1], verts[3], verts[2], verts[3]
+  ];
+  KuantumKafesi.add(createWireframe(edges, color));
+}
+
+addTetrahedron(tetra1, 0xffffff);
+addTetrahedron(tetra2, 0xaaaaaa);
 
   
 // --- YENİLENMİŞ OKUNABİLİR KOD VE 124875 GİRDAP MOTORU ---
