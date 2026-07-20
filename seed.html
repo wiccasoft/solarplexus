@@ -296,6 +296,9 @@ class KuantumPaketi {
     }
 }
 
+
+// --- ELEKTROMANYETİK TORK VE EKSENEL DÖNÜŞ MOTORU (ANIMATE) ---
+let globalDönüşHızı = 0.005; 
 // 1 -> 2 -> 4 -> 8 -> 7 -> 5 Sonsuz Döngü Sıralama Algoritması
 const rodinDizisi =[1, 2, 4, 8, 7, 5];
 let aktifDiziIndex = 0;
@@ -312,6 +315,19 @@ function setTopView(camera, controls) {
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
+
+     const beyazKutupObj = scene.getObjectByName("BEYAZ_KUTUP_ODASI");
+    const siyahKutupObj = scene.getObjectByName("SIYAH_KUTUP_ODASI");
+
+    if (!beyazKutupObj || !siyahKutupObj) {
+        if (controls) controls.update();
+        renderer.render(scene, camera);
+        return;
+    }
+
+       // --- Basitleştirilmiş Kiral Akış ve Enerji Paket Yönetimi ---
+    const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
+    
     
     // 1. Kararlı Enerji Akışı Tetikleyicisi (Sıradaki odaya paket fırlatır)
     if (aktifPaketler.length === 0) {
@@ -341,7 +357,7 @@ function animate() {
         if (paket.ilerleme >= 1.0) {
             let hedefOdaData = odalar.find(o => o.id === paket.hedefId);
             let hedefMesh = scene.getObjectByName(hedefOdaData.name);
-            
+            globalDönüşHızı += 0.002;
             if (hedefMesh) {
                 // Enerji odaya girdi: Oda neon gibi parlar
                 hedefMesh.material.emissiveIntensity = 3.0; 
@@ -357,17 +373,27 @@ function animate() {
         }
     }
 
-    // 3. Enerjinin Deşarj Olması (Odaların yavaşça kararıp sönmesi)
+   // --- 3. ENERJİNİN DEŞARJ OLMASI VE EKSENEL ROTASYON (MOTOR) ---
     odalar.forEach(o => {
-        if (!o.isPole) {
-            let odaMesh = scene.getObjectByName(o.name);
-            if (odaMesh && odaMesh.material.emissiveIntensity > 0) {
-                // Zamanla enerjiyi uzaya yayarak söner ve gizlenir
-                odaMesh.material.emissiveIntensity -= delta * 3.5;
-                odaMesh.material.opacity = Math.max(0.05, odaMesh.material.opacity - delta * 2.0);
+        let odaMesh = scene.getObjectByName(o.name);
+        
+        if (odaMesh) {
+            // Siyah ve Beyaz kutupların kendisi aksı oluşturduğu için sabit kalır,
+            // diğer tüm odalar (1,2,4,8,7,5) bu ana omurga mili etrafında fırıl fırıl döner.
+            if (!o.isPole) {
+                odaMesh.position.applyAxisAngle(anaAksVektoru, globalDönüşHızı * delta * 25);
+                
+                // Zamanla enerjiyi uzaya yayarak oda rengini yavaşça söndürür ve gizler
+                if (odaMesh.material.emissiveIntensity > 0) {
+                    odaMesh.material.emissiveIntensity -= delta * 3.5;
+                    odaMesh.material.opacity = Math.max(0.05, odaMesh.material.opacity - delta * 2.0);
+                }
             }
         }
     });
+
+    // Uzaydaki sürtünme etkisi (Sonsuz hızlanmayı engeller, kararlı baseline hızına çeker)
+    globalDönüşHızı = Math.max(0.005, globalDönüşHızı * 0.98); 
 
     if (controls) controls.update();
     renderer.render(scene, camera);
