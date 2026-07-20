@@ -237,19 +237,21 @@ const tetra2 = [
 const sphereRadius = 0.2; // küçük küreler küpün içine sığacak
 
 // 8 küre objesi (renkler doğru eşleşme ile)
+// ============================================================================
+// ADIM 2: KUTSAL MATEMATİK VE ENERJİ UYUMLU ODA KİMLİKLERİ (Satır 223)
+// ============================================================================
+// Kutsal girdap matrisine uygun olarak id'ler ve Türkçe isimler güncellendi.
+// 3 (Beyaz) ve 6 (Siyah) manyetik kutup olarak işaretlendi.
 const spheres = [
-  { name:"topFrontRight",    pos: new THREE.Vector3( 0.25,  0.25,  0.25), color: 0xff0000 }, // KIRMIZI
-  { name:"topBackRight",     pos: new THREE.Vector3( 0.25,  0.25, -0.25), color: 0xff6600 }, // TURUNCU (Sarı yerine)
-  { name:"bottomBackRight",  pos: new THREE.Vector3( 0.25, -0.25, -0.25), color: 0xffff00 }, // SARI (Turuncu yerine)
-  { name:"bottomBackLeft",   pos: new THREE.Vector3(-0.25, -0.25, -0.25), color: 0x00ff00 }, // YEŞİL
-  { name:"bottomFrontLeft",  pos: new THREE.Vector3(-0.25, -0.25,  0.25), color: 0x0000ff }, // MAVİ (Mor yerine)
-  { name:"topFrontLeft",     pos: new THREE.Vector3(-0.25,  0.25,  0.25), color: 0x660099 }, // MOR (Mavi yerine)
-  
-  // Eksen Kutup Küreleri
-  { name:"topBackLeft",      pos: new THREE.Vector3(-0.25,  0.25, -0.25), color: 0xffffff }, // BEYAZ
-  { name:"bottomFrontRight", pos: new THREE.Vector3( 0.25, -0.25,  0.25), color: 0x000000 }  // SİYAH
+  { id: 1, name: "KIRMIZI_ENERJI_ODASI", pos: new THREE.Vector3( 0.25,  0.25,  0.25), color: 0xff0000, isPole: false },
+  { id: 2, name: "TURUNCU_EMICI_ODA",    pos: new THREE.Vector3( 0.25,  0.25, -0.25), color: 0xff6600, isPole: false },
+  { id: 4, name: "SARI_ITICI_ODA",       pos: new THREE.Vector3( 0.25, -0.25, -0.25), color: 0xffff00, isPole: false },
+  { id: 8, name: "YESIL_ENERJI_ODASI",   pos: new THREE.Vector3(-0.25, -0.25, -0.25), color: 0x00ff00, isPole: false },
+  { id: 7, name: "MAVI_KALKAN_ODASI",    pos: new THREE.Vector3(-0.25, -0.25,  0.25), color: 0x0000ff, isPole: false },
+  { id: 5, name: "MOR_KABUK_ODASI",      pos: new THREE.Vector3(-0.25,  0.25,  0.25), color: 0x660099, isPole: false },
+  { id: 3, name: "BEYAZ_KUTUP_ODASI",    pos: new THREE.Vector3(-0.25,  0.25, -0.25), color: 0xffffff, isPole: true },
+  { id: 6, name: "SIYAH_KUTUP_ODASI",    pos: new THREE.Vector3( 0.25, -0.25,  0.25), color: 0x222222, isPole: true }
 ];
-
 
 // Sahneye ekleme
 spheres.forEach(s=>{
