@@ -228,6 +228,12 @@ const tetra2 = [
 const sphereRadius = 0.15; // Çıplak gözle akışı daha iyi görmek için odalar hafif küçültüldü
 const clock = new THREE.Clock();
 let aktifPaketler = [];
+let globalDönüşHızı = 0.005;
+
+
+// 1. KUTSALLARI BİR ARADA TUTACAK ANA GRUP (KAFES)
+const KuantumKafesi = new THREE.Group();
+scene.add(KuantumKafesi);
 
 // 1. Odaların Türkçe Kimlik, Renk ve Koordinat Haritası
 const odalar = [
@@ -258,7 +264,12 @@ odalar.forEach(o => {
     sphere.position.copy(o.pos);
     sphere.name = o.name; 
     scene.add(sphere);
+
+     KuantumKafesi.add(sphere); // Odalar gruba kilitlendi
 });
+
+
+
 
 // Merkez ve Çevre Kılavuz Kürelerini Görsel Karmaşayı Önlemek İçin Gizliyoruz/Soluklaştırıyoruz
 const sphereMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.02 });
@@ -298,7 +309,7 @@ class KuantumPaketi {
 
 
 // --- ELEKTROMANYETİK TORK VE EKSENEL DÖNÜŞ MOTORU (ANIMATE) ---
-let globalDönüşHızı = 0.005; 
+//let globalDönüşHızı = 0.005; 
 // 1 -> 2 -> 4 -> 8 -> 7 -> 5 Sonsuz Döngü Sıralama Algoritması
 const rodinDizisi =[1, 2, 4, 8, 7, 5];
 let aktifDiziIndex = 0;
@@ -320,6 +331,7 @@ function animate() {
     const siyahKutupObj = scene.getObjectByName("SIYAH_KUTUP_ODASI");
 
     if (!beyazKutupObj || !siyahKutupObj) {
+        KuantumKafesi.rotateOnWorldAxis(anaAksVektoru, globalDönüşHızı * delta * 25);
         if (controls) controls.update();
         renderer.render(scene, camera);
         return;
