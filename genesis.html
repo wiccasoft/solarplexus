@@ -380,17 +380,8 @@ let globalDönüşHızı = 0.005; // Kararlı baseline dönüş momentumu
 // ============================================================================
 const clock = new THREE.Clock();
 
-function animate() {
-  requestAnimationFrame(animate);
-  const d = clock.getDelta(), nO = KuantumKafesi.getObjectByName("BEYAZ_KUTUP_ODASI"), sO = KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");
-  if (nO && sO) {
-    // ... [Animation logic for particle movement and rotation] ...
-    if (hit && !aktifPaketler.length) { KuantumKafesi.rotateOnAxis(ax, 0.12); aktifIndexA = (aktifIndexA+1)%6; aktifIndexB = (aktifIndexB+1)%6; }
-    // ... [Fade out effect logic] ...
-  }
-  if (typeof controls !== 'undefined') controls.update(); renderer.render(scene, camera);
-}
-animate();
+<script>function animate(){requestAnimationFrame(animate);const d=clock.getDelta(),nO=KuantumKafesi.getObjectByName("BEYAZ_KUTUP_ODASI"),sO=KuantumKafesi.getObjectByName("SIYAH_KUTUP_ODASI");if(nO&&sO){const ax=new THREE.Vector3().subVectors(nO.position,sO.position).normalize();if(aktifPaketler.length===0){let idA=rodinDizisiA[aktifIndexA],nxA=rodinDizisiA[(aktifIndexA+1)%6],dA=spheres.find(o=>o.id===idA),hA=spheres.find(o=>o.id===nxA),mA=KuantumKafesi.getObjectByName(dA.name),tA=KuantumKafesi.getObjectByName(hA.name);let idB=rodinDizisiB[aktifIndexB],nxB=rodinDizisiB[(aktifIndexB+1)%6],dB=spheres.find(o=>o.id===idB),hB=spheres.find(o=>o.id===nxB),mB=KuantumKafesi.getObjectByName(dB.name),tB=KuantumKafesi.getObjectByName(hB.name);if(mA&&tA&&mB&&tB){let pA=new KuantumPaketi(mA,tA,hA.color);pA.hedefId=nxA;aktifPaketler.push(pA);let pB=new KuantumPaketi(mB,tB,hB.color);pB.hedefId=nxB;aktifPaketler.push(pB);}}let hit=false;for(let i=aktifPaketler.length-1;i>=0;i--){let p=aktifPaketler[i],hD=spheres.find(o=>o.id===p.hedefId),hM=KuantumKafesi.getObjectByName(hD.name);if(hM&&p.mesh){p.guncelle(d);if(p.ilerleme>=1.0){hM.material.emissiveIntensity=4.0;hM.material.opacity=1.0;KuantumKafesi.remove(p.mesh);aktifPaketler.splice(i,1);hit=true;}}}if(hit&&aktifPaketler.length===0){KuantumKafesi.rotateOnAxis(ax,0.12);aktifIndexA=(aktifIndexA+1)%6;aktifIndexB=(aktifIndexB+1)%6;}spheres.forEach(s=>{if(!s.isPole){let m=KuantumKafesi.getObjectByName(s.name);if(m){if(m.material.emissiveIntensity>0.05)m.material.emissiveIntensity-=d*3.8;if(m.material.opacity>0.15)m.material.opacity-=d*2.2;}}});}if(typeof controls!=='undefined')controls.update();renderer.render(scene,camera);}const clock=new THREE.Clock();animate();</script></body></html>
+
 </script>
 </body>
 </html>
