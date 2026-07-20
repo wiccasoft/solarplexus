@@ -352,27 +352,23 @@ for (let i = aktifPaketler.length - 1; i >= 0; i--) {
     }
 }
 
-   // --- 3. ENERJİNİN DEŞARJ OLMASI VE EKSENEL ROTASYON (MOTOR) ---
-    odalar.forEach(o => {
-        let odaMesh = scene.getObjectByName(o.name);
+// --- 2. AŞAMA: NEON ODAKLANMA VE DEŞARJ DÖNGÜSÜ ---
+odalar.forEach(o => {
+    // Odaları doğrudan kilitli oldukları KuantumKafesi içinden çekiyoruz
+    let odaMesh = KuantumKafesi.getObjectByName(o.name);
+    if (odaMesh) {
+        // KİLİT DÜZELTME: applyAxisAngle satırı kaldırıldı! 
+        // Tüm kafes tek kütle döndüğü için odaların yerel koordinatları sabit kalmalı.
         
-        if (odaMesh) {
-            // Siyah ve Beyaz kutupların kendisi aksı oluşturduğu için sabit kalır,
-            // diğer tüm odalar (1,2,4,8,7,5) bu ana omurga mili etrafında fırıl fırıl döner.
-            if (!o.isPole) {
-                odaMesh.position.applyAxisAngle(anaAksVektoru, globalDönüşHızı * delta * 25);
-                
-                // Zamanla enerjiyi uzaya yayarak oda rengini yavaşça söndürür ve gizler
-                if (odaMesh.material.emissiveIntensity > 0) {
-                    odaMesh.material.emissiveIntensity -= delta * 3.5;
-                    odaMesh.material.opacity = Math.max(0.05, odaMesh.material.opacity - delta * 2.0);
-                }
+        if (!o.isPole) {
+            // Parçacık odadan geçip gittikten sonra odanın rengini yavaşça söndürür
+            if (odaMesh.material.emissiveIntensity > 0) {
+                odaMesh.material.emissiveIntensity -= delta * 3.5;
+                odaMesh.material.opacity = Math.max(0.20, odaMesh.material.opacity - delta * 2.0);
             }
         }
-    });
-
-    // Uzaydaki sürtünme etkisi (Sonsuz hızlanmayı engeller, kararlı baseline hızına çeker)
-    globalDönüşHızı = Math.max(0.005, globalDönüşHızı * 0.98); 
+    }
+});
 
     KuantumKafesi.rotateOnAxis(anaAksVektoru, globalDönüşHızı * delta * 25);
 
