@@ -470,15 +470,17 @@ if (aktifPaketler.length === 0) {
             }
         }
 
-        // --- 3. DİNAMİK SPIN REAKSİYONU ---
+       // --- 3. DİNAMİK SPIN REAKSİYONU (DÜZELTİLMİŞ) ---
         if (vuruşOldu && aktifPaketler.length === 0) {
-            // Küp artık sabit bir açıyla değil, Ters Kare vuruşunun ürettiği dinamik torkla "tık" diye bükülür!
+            // Kapsam hatası çözüldü
             KuantumKafesi.rotateOnAxis(anaAksVektoru, dinamikTorkEtkisi);
-
- // Eski tanımlı olmayan indeksler yerine senin aktif indekslerini kaydırıyoruz
-aktifIndexA = (aktifIndexA + 1) % rodinDizisiA.length;
-aktifIndexB = (aktifIndexB + 1) % rodinDizisiB.length;
+            aktifIndexA = (aktifIndexA + 1) % rodinDizisiA.length;
+            aktifIndexB = (aktifIndexB + 1) % rodinDizisiB.length;
         }
+
+        // --- 4. FRAKTAL DEŞARJ DÖNGÜSÜ ---
+        // ... [Fraktal deşarj mantığı] ...
+    } // 🔑 Kapsam bloğu `if (beyazKutupObj...` düzeltildi.
 
         // --- 4. FRAKTAL DEŞARJ DÖNGÜSÜ ---
         spheres.forEach(s => {
