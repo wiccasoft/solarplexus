@@ -318,6 +318,37 @@ function setTopView(camera, controls) {
 }
 
 // ============================================================================
+// BÖLÜM 3: 124875 GİRDAP VERİ PAKETİ SINIFI (Satır 309 - 312 ARASI)
+// ============================================================================
+class KuantumPaketi {
+    constructor(kaynakMesh, hedefMesh, renk) {
+        this.kaynak = kaynakMesh; // Canlı dönen odanın kendisine mühürlendi
+        this.hedef = hedefMesh;
+        this.ilerleme = 0.0;
+        
+        // Akış esnasında çıplak gözle izlenecek plazma ışık noktası
+        const pGeom = new THREE.SphereGeometry(0.04, 16, 16);
+        const pMat = new THREE.MeshBasicMaterial({ color: renk });
+        this.mesh = new THREE.Mesh(pGeom, pMat);
+        this.mesh.position.copy(this.kaynak.position);
+        
+        // Paket de dönen kilitli kafese eklenmeli ki koordinatları şaşmasın!
+        KuantumKafesi.add(this.mesh);
+    }
+
+    guncelle(delta) {
+        this.ilerleme += delta * 2.0; // Enerji akış hızı
+        // Dönen odaların anlık pozisyonları arasında sarmal takip hesaplaması
+        this.mesh.position.lerpVectors(this.kaynak.position, this.hedef.position, this.ilerleme);
+    }
+}
+
+// Global veri paket takibi dizisi ve Rodin dizilimi
+let aktifPaketler = [];
+const rodinDizisi =;
+let aktifDiziIndex = 0;
+
+// ============================================================================
 // BÖLÜM 2: JROSKOPİK DÖNÜŞ MOTORU VE ANİMASYON DÖNGÜSÜ (Satır 312 - SONU)
 // ============================================================================
 let globalDönüşHızı = 0.005; // Kararlı baseline dönüş momentumu
