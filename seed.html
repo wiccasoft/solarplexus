@@ -323,32 +323,32 @@ function animate() {
         }
     }
 
-// --- DİNAMİK ODALARI HAVADA TAKİP ETME MOTORU ---
+// --- 1. AŞAMA: AKILLI HEDEFE KİLİTLENME MOTORU ---
 for (let i = aktifPaketler.length - 1; i >= 0; i--) {
     let paket = aktifPaketler[i];
-    paket.ilerleme += delta * 2.0; // Akış hızı
+    paket.ilerleme += delta * 2.0; // Parçacık akış hızı
 
-    // 🔑 KİLİT: Sabit koordinat (pos) yerine, odaların dönen canlı objelerini (Mesh) yakalıyoruz!
-    let kaynakMesh = scene.getObjectByName(odalar.find(o => o.id === rodinDizisi[aktifDiziIndex]).name);
-    let hedefMesh = scene.getObjectByName(odalar.find(o => o.id === paket.hedefId).name);
+    // Canlı dönen odaların objelerini doğrudan KuantumKafesi içinden yakala!
+    let kaynakMesh = KuantumKafesi.getObjectByName(odalar.find(o => o.id === rodinDizisi[aktifDiziIndex]).name);
+    let hedefMesh = KuantumKafesi.getObjectByName(odalar.find(o => o.id === paket.hedefId).name);
 
     if (kaynakMesh && hedefMesh) {
-        // Paket dönen hedef odayı havada sarmal çizerek kovalıyor!
+        // Sabit pos yerine, odaların dönen pozisyonları arasında akış hesapla!
         let anlikPoz = new THREE.Vector3().lerpVectors(kaynakMesh.position, hedefMesh.position, paket.ilerleme);
         if (paket.mesh) paket.mesh.position.copy(anlikPoz);
     }
 
-    // Paket hedefe ulaştığında odayı ateşleme mantığı (Mevcut kodun aynen devam ediyor)
+    // Paket hedefe tam merkezden ulaştığında:
     if (paket.ilerleme >= 1.0) {
-        let hedefMesh = scene.getObjectByName(odalar.find(o => o.id === paket.hedefId).name);
-        globalDönüşHızı += 0.002;
+        let hedefMesh = KuantumKafesi.getObjectByName(odalar.find(o => o.id === paket.hedefId).name);
+        globalDönüşHızı += 0.002; // Motora tork (itme) ekle
         if (hedefMesh) {
-            hedefMesh.material.emissiveIntensity = 3.0;
+            hedefMesh.material.emissiveIntensity = 3.0; // Neon parlama patlaması
             hedefMesh.material.opacity = 1.0;
         }
-        scene.remove(paket.mesh);
+        if (paket.mesh) KuantumKafesi.remove(paket.mesh);
         aktifPaketler.splice(i, 1);
-        aktifDiziIndex = (aktifDiziIndex + 1) % rodinDizisi.length;
+        aktifDiziIndex = (aktifDiziIndex + 1) % rodinDizisi.length; // Sıradaki odaya geç
     }
 }
 
