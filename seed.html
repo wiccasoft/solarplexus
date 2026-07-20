@@ -250,9 +250,9 @@ odalar.forEach(o => {
     const mat = new THREE.MeshPhongMaterial({
         color: o.color,
         emissive: o.color,
-        emissiveIntensity: o.isPole ? 1.0 : 0.0,
+         emissiveIntensity: o.isPole ? 1.0 : 0.05, 
         transparent: true,
-        opacity: o.isPole ? 1.0 : 0.05
+        opacity: o.isPole ? 1.0 : 0.20 
     });
     const sphere = new THREE.Mesh(geom, mat);
     sphere.position.copy(o.pos);
