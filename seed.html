@@ -404,7 +404,8 @@ function animate() {
                 if (hedefMesh) {
                     // 1. Gluon odaya girdiğinde oda neon seviyesinde parlar
                     hedefMesh.material.emissiveIntensity = 4.0;
-                    
+                        // 🔑 IŞIKLANDIRMA KİLİDİ: Odanın saydamlığını anlık %100 yap ki ışık çıplak gözle patlasın!
+                        hedefMesh.material.opacity = 1.0; 
                     // 2. 🔑 KİLİT NOKTA: Sürekli dönme kapalı! 
                     // Sadece ve sadece paket odaya girince kafesi tek bir adım (aşama) döndürür
                     //const anaAksVektoru = new THREE.Vector3().subVectors(beyazKutupObj.position, siyahKutupObj.position).normalize();
